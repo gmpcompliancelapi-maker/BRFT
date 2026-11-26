@@ -281,7 +281,7 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
         <p>Daftar seluruh perbaikan dan log aktivitas perubahan status</p>
       </div>
       <div class="hero-actions">
-        <input type="text" id="search-mon" style="width:190px" placeholder="Cari no. bets, produk..." oninput="renderMonitoring()">
+        <input type="text" id="search-mon" style="width:190px" placeholder="Cari bets, produk, PJ..." oninput="renderMonitoring()">
         <select id="fil-mon-status" style="width:auto" aria-label="Filter status" onchange="renderMonitoring()">
           <option value="">Semua Status</option>
           <option value="Open">Open</option>
@@ -436,6 +436,8 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
   </form>
 </div>
 
+<datalist id="pic-datalist"></datalist>
+
 <!-- MODAL LOGIN -->
 <div class="backdrop" id="modal-auth" onclick="if(event.target===this)toggleAuthModal()">
   <div class="sheet" style="max-width:380px">
@@ -518,15 +520,8 @@ let MONTHLY_RELEASE = {};
 let WORKSPACE_BATCHES = [];
 let WORKSPACE_PRODUCTS = [];
 
-let R = [
-  { id:'1', tglKirim:'2026-11-01', tglKembali:'2026-11-02', fas:'SOLID', bag:'PN2', subBag:'PP', prod:'Apialys Sirup 100ml', bets:'30426', kat:'Ketidaklengkapan Pengisian', sub:'Paraf / Inisial', ket:'Paraf operator pengisian belum lengkap', st:'Close', usr:'Admin QA' },
-  { id:'2', tglKirim:'2026-11-05', tglKembali:'', fas:'LIQUID', bag:'QC', subBag:'', prod:'Topazol Infus', bets:'S6296', kat:'Ketidaksesuaian Pengisian', sub:'Hasil Uji / Perhitungan', ket:'Perhitungan rendemen akhir perlu dikoreksi', st:'Open', usr:'Admin QA' },
-  { id:'3', tglKirim:'2026-11-08', tglKembali:'', fas:'SOLID', bag:'PN1', subBag:'KP', prod:'Becom-Zet Kaplet', bets:'30511', kat:'Ketidaklengkapan Pengisian', sub:'Tanggal / Waktu', ket:'Jam mulai pencampuran belum dicatat', st:'Open', usr:'Admin QA' },
-  { id:'4', tglKirim:'2026-11-09', tglKembali:'2026-11-10', fas:'STERIL', bag:'WH', subBag:'', prod:'Cefotaxime Inj', bets:'ST882', kat:'Ketidaklengkapan Dokumen', sub:'Kelengkapan Dokumen', ket:'Setelah dicek ulang CoA sudah terlampir di map', st:'Konfirmasi', usr:'Supervisor QA' },
-  { id:'5', tglKirim:'2026-11-10', tglKembali:'', fas:'SOLID', bag:'PN2', subBag:'KS', prod:'Sanmol Tablet', bets:'30540', kat:'Ketidaksesuaian Pengisian', sub:'Line Clearance', ket:'Checklist pembersihan jalur belum ditandatangani SPV', st:'Open', usr:'Admin QA' }
-];
-
-let L = R.map((r, i) => ({ id: `log-${i + 1}`, tgl: r.tglKirim, jam: '08:00', usr: r.usr, aksi: 'Input data', ref: r.bets, st: r.st }));
+let R = [];
+let L = [];
 let authUser = null;
 let isLoggedIn = false;
 let currentUser = { role: 'public', name: 'Publik', initial: 'PUB' };
@@ -548,43 +543,36 @@ function setSyncStatus(text, color = '#38bdf8') {
   }
 }
 
-function persistLocal() {
-  try {
-    localStorage.setItem('br_r_v4', JSON.stringify(R));
-    localStorage.setItem('br_l_v4', JSON.stringify(L));
-    localStorage.setItem('br_cfg_v4', JSON.stringify(CFG));
-    localStorage.setItem('br_sub_v4', JSON.stringify(SUB_KATEGORI));
-    localStorage.setItem('br_rel_v4', JSON.stringify(MONTHLY_RELEASE));
-  } catch (e) {}
-}
-
-try {
-  const s = localStorage.getItem('br_r_v4'); if (s) R = JSON.parse(s);
-  const l = localStorage.getItem('br_l_v4'); if (l) L = JSON.parse(l);
-  const c = localStorage.getItem('br_cfg_v4'); if (c) CFG = JSON.parse(c);
-  const sub = localStorage.getItem('br_sub_v4'); if (sub) SUB_KATEGORI = JSON.parse(sub);
-  const rel = localStorage.getItem('br_rel_v4'); if (rel) MONTHLY_RELEASE = JSON.parse(rel);
-} catch (e) {}
+// Data hanya berasal dari Firestore (tanpa cache lokal / data contoh),
+// supaya tampilan publik selalu data asli. Sisa cache versi lama dibersihkan.
+function persistLocal() {}
+try { ['br_r_v4','br_l_v4','br_cfg_v4','br_sub_v4','br_rel_v4'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
 
 function syncRoleUI() {
   if (!authUser) {
     isLoggedIn = false;
     currentUser = { role: 'public', name: 'Publik', initial: 'PUB' };
     $('user-name').textContent = 'Publik';
-    $('user-role').textContent = 'Belum Login';
+    $('user-role').textContent = 'Mode lihat saja';
     $('auth-btn').textContent = 'Masuk';
     $('user-initial').textContent = 'PUB';
     $('logout-wrap').style.display = 'none';
+    $('nav-input').style.display = 'none';
+    $('nav-settings').style.display = 'none';
+    $('tab-log').style.display = 'none';
   } else {
     isLoggedIn = true;
     const label = authUser.displayName || authUser.email || 'Pengguna';
     const shortInit = (authUser.email || label || 'US').slice(0, 2).toUpperCase();
     currentUser = { role: 'user', name: label, initial: shortInit };
     $('user-name').textContent = label;
-    $('user-role').textContent = 'Terlogin';
+    $('user-role').textContent = 'Terlogin (bisa edit)';
     $('user-initial').textContent = shortInit;
     $('auth-btn').textContent = 'Akun';
     $('logout-wrap').style.display = 'flex';
+    $('nav-input').style.display = '';
+    $('nav-settings').style.display = '';
+    $('tab-log').style.display = '';
   }
 }
 
@@ -698,7 +686,15 @@ function extractProductInfo(docObj) {
   return { name: String(name || ''), facility: String(facility || '') };
 }
 
+function refreshPicDatalist() {
+  const dl = $('pic-datalist');
+  if (!dl) return;
+  const names = Array.from(new Set(R.map(r => String(r.pic || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  dl.innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+}
+
 function refreshBatchDatalist() {
+  refreshPicDatalist();
   const dl = $('batch-datalist');
   if (!dl) return;
   const set = new Set();
@@ -711,34 +707,29 @@ function refreshBatchDatalist() {
 
 function subscribeFirestore() {
   clearFirestoreSubs();
-  if (!authUser) {
-    setSyncStatus('Login utk Sync', '#fbbf24');
-    return;
-  }
-
   setSyncStatus('Menghubungkan...', '#38bdf8');
+  const onOk = () => setSyncStatus(authUser ? 'Firestore Aktif' : 'Mode Lihat (Data Asli)', '#4ade80');
+  const onDenied = () => setSyncStatus(authUser ? 'Cek Firestore Rules' : 'Data publik belum dibuka (Rules)', '#f87171');
 
   unsubs.push(onSnapshot(repairsCol(), (snap) => {
-    if (!snap.empty) {
-      R = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      persistLocal();
-      refreshBatchDatalist();
-      rerenderCurrentPage();
-    }
-    setSyncStatus('Firestore Aktif', '#4ade80');
-  }, () => {
-    setSyncStatus('Cek Firestore Rules', '#f87171');
-  }));
+    R = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    refreshBatchDatalist();
+    rerenderCurrentPage();
+    onOk();
+  }, onDenied));
 
-  unsubs.push(onSnapshot(logsCol(), (snap) => {
-    if (!snap.empty) {
+  // Log aktivitas memuat nama/email pengguna -> hanya dimuat saat login
+  if (authUser) {
+    unsubs.push(onSnapshot(logsCol(), (snap) => {
       L = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      persistLocal();
       if ((location.hash.replace('#', '') || 'dashboard') === 'monitoring' && monitorTabActive === 2) {
         renderMonitoring();
       }
-    }
-  }, () => {}));
+    }, () => {}));
+  } else {
+    L = [];
+    if (monitorTabActive === 2) setMonitorTab(1);
+  }
 
   unsubs.push(onSnapshot(metaCol(), (snap) => {
     snap.forEach((d) => {
@@ -752,7 +743,6 @@ function subscribeFirestore() {
         MONTHLY_RELEASE = d.data().map;
       }
     });
-    persistLocal();
     rerenderCurrentPage();
   }, () => {}));
 
@@ -774,15 +764,12 @@ onAuthStateChanged(auth, (user) => {
   authUser = user;
   syncRoleUI();
   subscribeFirestore();
+  if (!user && location.hash.replace('#', '') === 'pengaturan') navigate('dashboard');
   rerenderCurrentPage();
 });
 
 async function saveRepairDoc(record) {
-  persistLocal();
-  if (!authUser) {
-    setSyncStatus('Lokal (Belum Login)', '#fbbf24');
-    return;
-  }
+  if (!authUser) return;
   try {
     setSyncStatus('Menyimpan...', '#fbbf24');
     await setDoc(doc(db, ...WORKSPACE_ROOT, 'brft_repairs', record.id), record);
@@ -790,14 +777,13 @@ async function saveRepairDoc(record) {
   } catch (err) {
     console.warn('Firestore save brft_repairs:', err);
     setSyncStatus('Gagal Sync (Rules)', '#f87171');
+    alert('Data GAGAL tersimpan ke server. Cek koneksi / Firestore Rules.');
   }
 }
 
 async function saveLogEntry(entry) {
   const logId = entry.id || String(Date.now() + Math.random());
   const fullEntry = { ...entry, id: logId };
-  L.push(fullEntry);
-  persistLocal();
   if (!authUser) return;
   try {
     await setDoc(doc(db, ...WORKSPACE_ROOT, 'brft_logs', logId), fullEntry);
@@ -807,11 +793,7 @@ async function saveLogEntry(entry) {
 }
 
 async function saveMetaDoc(key, data) {
-  persistLocal();
-  if (!authUser) {
-    setSyncStatus('Lokal (Belum Login)', '#fbbf24');
-    return;
-  }
+  if (!authUser) return;
   try {
     setSyncStatus('Menyimpan...', '#fbbf24');
     await setDoc(doc(db, ...WORKSPACE_ROOT, 'brft_meta', key), data);
@@ -880,7 +862,7 @@ function renderBetsList() {
   betsCurrentOptions = ctBatchOptions($('f_bets').value).slice(0, 60);
   betsActiveIdx = betsCurrentOptions.length ? 0 : -1;
   if (!WORKSPACE_BATCHES.length) {
-    box.innerHTML = '<div class="combo-empty">Belum ada data bets dari Cycle Time (belum login / belum ada batch). Centang “input manual” bila perlu.</div>';
+    box.innerHTML = '<div class="combo-empty">Belum ada data bets dari Cycle Time (belum ada batch / akses belum dibuka). Centang “input manual” bila perlu.</div>';
   } else if (!betsCurrentOptions.length) {
     box.innerHTML = '<div class="combo-empty">Tidak ada bets yang cocok. Centang “Bets belum ada di Cycle Time (input manual)” bila memang belum tercatat.</div>';
   } else {
@@ -1095,6 +1077,7 @@ function renderDashboard() {
       <th>Fasilitas</th>
       <th>Bagian</th>
       <th>Sub Kategori</th>
+      <th>Penanggung Jawab</th>
       <th>Tgl Kirim</th>
       <th>Umur</th>
       <th>Status</th>
@@ -1110,6 +1093,7 @@ function renderDashboard() {
         <td>${esc(r.fas)}</td>
         <td><span class="chip">${esc(bagDisplay)}</span></td>
         <td>${esc(r.sub)}</td>
+        <td>${r.pic ? esc(r.pic) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${esc(r.tglKirim)}</td>
         <td>${ageCell(age, r.st === 'Open')}</td>
         <td>
@@ -1146,7 +1130,7 @@ window.renderMonitoring = function() {
   let D = R.filter(r =>
     (!f || r.fas === f) &&
     (!stFilter || r.st === stFilter) &&
-    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q))
+    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q) || String(r.pic || '').toLowerCase().includes(q))
   );
 
   D.sort((a, b) => {
@@ -1164,6 +1148,7 @@ window.renderMonitoring = function() {
       <th>Fasilitas</th>
       <th>Bagian</th>
       <th>Sub Kategori</th>
+      <th>Penanggung Jawab</th>
       <th>Tgl Kirim</th>
       <th>Tgl Kembali</th>
       <th>Umur</th>
@@ -1186,6 +1171,7 @@ window.renderMonitoring = function() {
         <td>${esc(r.fas)}</td>
         <td>${esc(bagDisplay)}</td>
         <td>${esc(r.sub)}</td>
+        <td>${r.pic ? esc(r.pic) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${esc(r.tglKirim)}</td>
         <td>${r.tglKembali ? esc(r.tglKembali) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${ageCell(age, r.st === 'Open')}</td>
@@ -1322,6 +1308,7 @@ function createRepairItemHTML(data = {}, isSingleEdit = false) {
   const st = data.st || 'Open';
   const tglKembali = data.tglKembali || '';
   const ket = data.ket || '';
+  const pic = data.pic || '';
   const showSubBag = (bag === 'PN1' || bag === 'PN2');
 
   let subOptions = SUB_KATEGORI.map(s => `<option value="${esc(s)}" ${s === sub ? 'selected' : ''}>${esc(s)}</option>`).join('');
@@ -1372,6 +1359,9 @@ function createRepairItemHTML(data = {}, isSingleEdit = false) {
       <label class="c2">Sub Kategori
         <select class="inp-sub">${subOptions}</select>
       </label>
+      <label class="c2">Penanggung Jawab Perbaikan
+        <input type="text" class="inp-pic" required list="pic-datalist" value="${esc(pic)}" placeholder="Nama penanggung jawab...">
+      </label>
       <label class="c4">Keterangan Perbaikan
         <input type="text" class="inp-ket" required value="${esc(ket)}" placeholder="Jelaskan detail perbaikan atau hasil konfirmasi...">
       </label>
@@ -1394,6 +1384,7 @@ window.duplicateRepairRow = function(rid) {
     tglKembali: rowEl.querySelector('.inp-tgl-kembali').value,
     kat: rowEl.querySelector('.inp-kat').value,
     sub: rowEl.querySelector('.inp-sub').value,
+    pic: rowEl.querySelector('.inp-pic').value,
     ket: ''
   });
 };
@@ -1534,6 +1525,7 @@ window.saveTemuan = async function(e) {
       betsSource: manual ? 'manual' : 'cycletime',
       kat: card.querySelector('.inp-kat').value,
       sub: card.querySelector('.inp-sub').value,
+      pic: card.querySelector('.inp-pic').value.trim(),
       ket: card.querySelector('.inp-ket').value.trim(),
       st,
       usr: currentUser.name
@@ -1619,9 +1611,9 @@ window.saveSettings = async function(e) {
 };
 
 window.exportData = function() {
-  let csv = '\uFEFFNo.Bets,Nama Produk,Fasilitas,Bagian,Sub-Bagian,Kategori,Sub Kategori,Status,Tgl Kirim Perbaikan,Tgl Perbaikan Kembali,Umur (Hari),Keterangan\n';
+  let csv = '\uFEFFNo.Bets,Nama Produk,Fasilitas,Bagian,Sub-Bagian,Kategori,Sub Kategori,Penanggung Jawab,Status,Tgl Kirim Perbaikan,Tgl Perbaikan Kembali,Umur (Hari),Keterangan\n';
   R.forEach(r => {
-    csv += `"${r.bets}","${r.prod}","${r.fas}","${r.bag}","${r.subBag || '-'}","${r.kat}","${r.sub}","${r.st}","${r.tglKirim}","${r.tglKembali || '-'}","${calcAgeDays(r)}","${String(r.ket || '').replace(/"/g, '""')}"\n`;
+    csv += `"${r.bets}","${r.prod}","${r.fas}","${r.bag}","${r.subBag || '-'}","${r.kat}","${r.sub}","${String(r.pic || '').replace(/"/g, '""')}","${r.st}","${r.tglKirim}","${r.tglKembali || '-'}","${calcAgeDays(r)}","${String(r.ket || '').replace(/"/g, '""')}"\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
