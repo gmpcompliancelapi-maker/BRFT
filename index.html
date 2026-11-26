@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f2733">
+<meta name="theme-color" content="#161d29">
 <title>Monitoring Perbaikan Batch Record - Sistem Terintegrasi</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icons/icon-192.svg" type="image/svg+xml">
@@ -11,108 +11,121 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#eceff2;--card:#fff;--tx:#1b2330;--mu:#6b7482;--bd:#e3e6ea;--hd:#f3f5f7;
-  --sb:#1f2733;--sbh:#2d3746;--g:#16a34a;--o:#ea7c2b;--b:#2b7fd1;--r:#dc3a3a;--gy:#8d96a5;
-  --sb-w:220px;--sb-c:64px;
+  --bg:#f1f5f9;--card:#ffffff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0;--hd:#f8fafc;
+  --sb:#161d29;--sbh:#243044;--g:#16a34a;--o:#ea7c2b;--b:#2563eb;--r:#dc2626;--gy:#64748b;
+  --sb-w:232px;--sb-c:68px;--ring:0 0 0 3px rgba(37,99,235,.16);
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04),0 1px 3px rgba(15,23,42,.06);
+  --shadow-md:0 10px 25px -5px rgba(15,23,42,.12),0 8px 10px -6px rgba(15,23,42,.08);
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161d;--card:#1a212b;--tx:#e6e9ee;--mu:#98a1ae;--bd:#2a323d;--hd:#212a36;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#11161d;--card:#1a212b;--tx:#e6e9ee;--mu:#98a1ae;--bd:#2a323d;--hd:#212a36;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1018;--card:#131b26;--tx:#f1f5f9;--mu:#94a3b8;--bd:#233044;--hd:#192332;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 14px 28px -6px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0b1018;--card:#131b26;--tx:#f1f5f9;--mu:#94a3b8;--bd:#233044;--hd:#192332;--shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow-md:0 14px 28px -6px rgba(0,0,0,.55);color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--tx);font:13px/1.4 Inter,system-ui,sans-serif;display:flex;min-height:100vh}
+body{background:var(--bg);color:var(--tx);font:13px/1.45 Inter,system-ui,-apple-system,sans-serif;display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
 
 /* SIDEBAR */
 aside{
-  width:var(--sb-w);background:var(--sb);color:#cfd6df;padding:16px 10px;
+  width:var(--sb-w);background:linear-gradient(180deg,#161d29 0%,#101620 100%);color:#cbd5e1;padding:16px 12px;
   display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0;
-  transition:width .25s ease;z-index:100;overflow:hidden;box-shadow:2px 0 8px rgba(0,0,0,.15);
+  transition:width .24s cubic-bezier(.4,0,.2,1);z-index:100;overflow:hidden;border-right:1px solid rgba(255,255,255,.06)
 }
-body.compact-mode:not(.pinned) aside{width:var(--sb-c);}
+body.compact-mode:not(.pinned) aside{width:var(--sb-c)}
 body.compact-mode:not(.pinned) aside .logo span,
 body.compact-mode:not(.pinned) aside nav button span,
-body.compact-mode:not(.pinned) aside .user span{opacity:0;pointer-events:none;width:0;overflow:hidden;transition:opacity .15s}
-body.compact-mode:not(.pinned) aside:hover{width:var(--sb-w);box-shadow:4px 0 16px rgba(0,0,0,.3)}
+body.compact-mode:not(.pinned) aside .user span{opacity:0;pointer-events:none;width:0;overflow:hidden;transition:opacity .14s ease}
+body.compact-mode:not(.pinned) aside:hover{width:var(--sb-w);box-shadow:var(--shadow-md)}
 body.compact-mode:not(.pinned) aside:hover .logo span,
 body.compact-mode:not(.pinned) aside:hover nav button span,
 body.compact-mode:not(.pinned) aside:hover .user span{opacity:1;width:auto;overflow:visible}
 
-.logo{display:flex;align-items:center;gap:10px;padding:0 6px 16px;font-weight:700;color:#fff;white-space:nowrap}
-.logo i{width:28px;height:28px;border-radius:50%;border:3px solid #2b9fd1;border-right-color:transparent;display:block;flex-shrink:0}
-.pin-btn{margin-left:auto;background:none;border:none;color:#98a1ae;cursor:pointer;padding:4px;border-radius:4px;display:flex}
+.logo{display:flex;align-items:center;gap:10px;padding:2px 6px 18px;font-weight:700;font-size:14px;color:#fff;white-space:nowrap;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:12px}
+.logo i{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#2563eb 0%,#0ea5e9 100%);display:grid;place-items:center;flex-shrink:0;box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.logo i::after{content:"";width:12px;height:12px;border-radius:50%;border:2.5px solid #fff;border-right-color:transparent}
+.pin-btn{margin-left:auto;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#94a3b8;cursor:pointer;padding:5px;border-radius:6px;display:flex;transition:all .15s}
 .pin-btn:hover{color:#fff;background:var(--sbh)}
-body.pinned .pin-btn{color:#2b9fd1}
+body.pinned .pin-btn{color:#60a5fa;border-color:rgba(96,165,250,.35);background:rgba(37,99,235,.15)}
 
-nav{display:flex;flex-direction:column;gap:3px}
-nav button{all:unset;display:flex;align-items:center;gap:12px;width:100%;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;white-space:nowrap}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{all:unset;display:flex;align-items:center;gap:11px;width:100%;padding:10px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s;box-sizing:border-box}
 nav button:hover,nav button.on{background:var(--sbh);color:#fff}
+nav button.on{background:linear-gradient(90deg,rgba(37,99,235,.28) 0%,rgba(37,99,235,.08) 100%);color:#fff;box-shadow:inset 3px 0 0 #3b82f6}
 nav svg{width:18px;height:18px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.8}
 
 .sp{flex:1}
-.user{display:flex;align-items:center;gap:10px;padding:10px 6px;color:#fff;font-size:12px;border-top:1px solid var(--sbh);white-space:nowrap}
-.user b{width:30px;height:30px;border-radius:50%;background:#44546a;display:grid;place-items:center;font-size:11px;flex-shrink:0}
+.user{display:flex;align-items:center;gap:10px;padding:12px 6px 4px;color:#fff;font-size:12px;border-top:1px solid rgba(255,255,255,.08);white-space:nowrap}
+.user b{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#334155 0%,#1e293b 100%);border:1px solid rgba(255,255,255,.12);display:grid;place-items:center;font-size:11px;font-weight:700;flex-shrink:0}
 
 /* TOPBAR MOBILE & MAIN */
-.mobile-top{display:none;align-items:center;justify-content:space-between;background:var(--sb);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:99}
-.mobile-top button{all:unset;cursor:pointer;display:flex;padding:4px}
+.mobile-top{display:none;align-items:center;justify-content:space-between;background:var(--sb);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:99;border-bottom:1px solid rgba(255,255,255,.08)}
+.mobile-top button{all:unset;cursor:pointer;display:flex;padding:6px;border-radius:8px;background:rgba(255,255,255,.06)}
 
-main{flex:1;min-width:0;padding:22px 24px;display:flex;flex-direction:column;gap:16px}
-.page{display:none;flex-direction:column;gap:16px}
+main{flex:1;min-width:0;padding:24px 28px;display:flex;flex-direction:column;gap:18px;max-width:1440px;margin:0 auto;width:100%}
+.page{display:none;flex-direction:column;gap:18px;animation:fadeIn .18s ease}
 .page.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 
-header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-h1{font-size:21px;font-weight:800;letter-spacing:.2px}
-header p{color:var(--mu);font-size:13px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;background:var(--card);padding:18px 20px;border-radius:14px;border:1px solid var(--bd);box-shadow:var(--shadow-sm)}
+h1{font-size:19px;font-weight:800;letter-spacing:-.2px}
+header p{color:var(--mu);font-size:12.5px;margin-top:3px}
 .hr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-select,input,textarea{font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;width:100%}
-.btn{background:var(--b);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;font:inherit;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.btn:hover{filter:brightness(1.06)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
-.btn-sm{padding:4px 8px;font-size:11px;border-radius:6px}
-.btn-danger{background:rgba(220,58,58,.12);color:var(--r);border:1px solid rgba(220,58,58,.25)}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;min-width:0}
+
+select,input,textarea{font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:9px;padding:8px 11px;width:100%;transition:border-color .15s,box-shadow .15s}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--b);box-shadow:var(--ring)}
+
+.btn{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:#fff;border:0;border-radius:9px;padding:8px 14px;font-weight:600;cursor:pointer;font:inherit;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(37,99,235,.22);transition:all .15s}
+.btn:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.btn:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sec{background:var(--card);color:var(--tx);border:1px solid var(--bd);box-shadow:var(--shadow-sm)}
+.btn-sec:hover:not(:disabled){background:var(--hd);border-color:#cbd5e1}
+.btn-sm{padding:5px 9px;font-size:11px;border-radius:7px}
+.btn-danger{background:rgba(220,38,38,.1);color:var(--r);border:1px solid rgba(220,38,38,.25);box-shadow:none}
+.btn-danger:hover:not(:disabled){background:rgba(220,38,38,.16)}
+
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;min-width:0;box-shadow:var(--shadow-sm)}
 
 /* KPI & BAGIAN CARDS */
-.k4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.k6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-.kpi{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.kpi small{font-weight:700;letter-spacing:.3px;color:var(--mu);display:block;font-size:11px}
-.kpi strong{font-size:26px;font-weight:800;line-height:1.15}
-.kpi em{font-style:normal;font-size:11px;color:var(--mu);display:block;margin-top:2px}
+.k4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.k6{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative;overflow:hidden}
+.kpi small{font-weight:700;letter-spacing:.4px;color:var(--mu);display:block;font-size:10.5px;text-transform:uppercase}
+.kpi strong{font-size:28px;font-weight:800;line-height:1.15;letter-spacing:-.5px}
+.kpi em{font-style:normal;font-size:11px;color:var(--mu);display:block;margin-top:3px}
 
-.bag-card{cursor:pointer;transition:all .15s ease;border:2px solid var(--bd);text-align:center;padding:12px 8px}
-.bag-card:hover{border-color:var(--b);transform:translateY(-2px)}
-.bag-card.selected{border-color:var(--b);background:rgba(43,127,209,.08)}
-.bag-card small{font-weight:700;color:var(--mu);font-size:11px;display:block}
-.bag-card strong{font-size:24px;font-weight:800;display:block;margin:4px 0;color:var(--tx)}
-.bag-card span{font-size:10px;color:var(--mu)}
+.bag-card{cursor:pointer;transition:all .18s ease;border:1.5px solid var(--bd);text-align:center;padding:14px 10px;border-radius:12px}
+.bag-card:hover{border-color:var(--b);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.bag-card.selected{border-color:var(--b);background:rgba(37,99,235,.07);box-shadow:var(--ring)}
+.bag-card small{font-weight:700;color:var(--mu);font-size:11px;letter-spacing:.3px;display:block}
+.bag-card strong{font-size:25px;font-weight:800;display:block;margin:4px 0;color:var(--tx)}
+.bag-card span{font-size:10.5px;font-weight:600;color:var(--mu)}
 
-h3{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+h3{font-size:13.5px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--bd)}
 
-.sc{overflow:auto;max-height:400px}
+.sc{overflow:auto;max-height:420px;border-radius:10px;border:1px solid var(--bd)}
 table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
-th{background:var(--hd);text-align:left;font-weight:600;padding:9px 8px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--bd)}
-td{padding:8px;border-bottom:1px solid var(--bd);vertical-align:middle}
-td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
+th{background:var(--hd);text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.3px;color:var(--mu);padding:10px 10px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--bd)}
+td{padding:9px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+tbody tr:hover{background:rgba(37,99,235,.03)}
+tbody tr:last-child td{border-bottom:0}
+td select{padding:4px 8px;font-size:11px;font-weight:600;width:auto;border-radius:7px}
 
 /* MODAL & MULTI-ITEM FORM */
-.scrim{position:fixed;inset:0;background:rgba(10,15,22,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:200}
+.scrim{position:fixed;inset:0;background:rgba(10,15,22,.62);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;padding:16px;z-index:200}
 .scrim.on{display:flex}
-.modal-box{background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:740px;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 32px rgba(0,0,0,.25)}
-.batch-header-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--hd);padding:12px;border-radius:8px;border:1px solid var(--bd)}
+.modal-box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:22px;width:100%;max-width:740px;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-md)}
+.batch-header-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:var(--hd);padding:14px;border-radius:10px;border:1px solid var(--bd)}
 .batch-header-grid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--mu);font-weight:600}
 
-.item-card{border:1px solid var(--bd);border-radius:8px;padding:12px;background:var(--card);display:flex;flex-direction:column;gap:10px;position:relative}
-.item-card-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--bd);padding-bottom:6px}
+.item-card{border:1px solid var(--bd);border-radius:10px;padding:14px;background:var(--card);display:flex;flex-direction:column;gap:10px}
+.item-card-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--bd);padding-bottom:8px}
 .item-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .item-grid label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--mu);font-weight:600}
 .item-grid .span-2{grid-column:span 2}
 .item-grid .span-4{grid-column:span 4}
 
-.lookup-hint{font-size:11px;color:var(--b);margin-top:4px;min-height:15px}
+.lookup-hint{font-size:11px;color:var(--b);margin-top:6px;min-height:15px;font-weight:500}
 .auth-tabs{display:flex;gap:8px;margin-bottom:12px}
-.auth-tabs button{flex:1;padding:6px;font-size:12px;border-radius:6px;border:1px solid var(--bd);background:var(--hd);color:var(--tx);cursor:pointer;font-weight:600}
+.auth-tabs button{flex:1;padding:7px;font-size:12px;border-radius:8px;border:1px solid var(--bd);background:var(--hd);color:var(--tx);cursor:pointer;font-weight:600;transition:all .15s}
 .auth-tabs button.active{background:var(--b);color:#fff;border-color:var(--b)}
 
 @media(max-width:1024px){
@@ -123,6 +136,7 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
   aside{position:fixed;left:-100%;top:0;height:100vh;width:var(--sb-w)!important;transition:left .25s ease}
   body.mobile-open aside{left:0}
   .mobile-top{display:flex}
+  main{padding:16px}
   .k4,.k6{grid-template-columns:1fr 1fr}
   aside .pin-btn{display:none}
   .batch-header-grid,.item-grid{grid-template-columns:1fr 1fr}
@@ -133,8 +147,8 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
 <body class="compact-mode">
 
 <div class="mobile-top">
-  <div style="font-weight:700">MONITORING PERBAIKAN BR</div>
-  <button onclick="toggleMobileMenu()" aria-label="Buka menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+  <div style="font-weight:700;letter-spacing:.2px">MONITORING PERBAIKAN BR</div>
+  <button onclick="toggleMobileMenu()" aria-label="Buka menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
 </div>
 
 <aside id="sidebar">
@@ -143,7 +157,7 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
     <button class="pin-btn" onclick="togglePin()" title="Pin Sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></button>
   </div>
   <nav aria-label="Menu utama">
-    <button data-target="dashboard" onclick="navigate('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></button>
+    <button data-target="dashboard" onclick="navigate('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></button>
     <button data-target="monitoring" onclick="navigate('monitoring')"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg><span>Monitoring</span></button>
     <button data-target="analitik" onclick="navigate('analitik')"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Analitik & Rekap</span></button>
     <button data-target="input" onclick="openFormModal()" id="nav-input" style="display:none"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Input Perbaikan</span></button>
@@ -155,9 +169,9 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
     <div style="flex:1;overflow:hidden">
       <div id="user-name" style="font-weight:600">Publik</div>
       <div id="user-role" style="font-size:10px;color:var(--mu)">Belum Login</div>
-      <div id="sync-status" style="font-size:10px;color:#2b9fd1">Menunggu Auth...</div>
+      <div id="sync-status" style="font-size:10px;color:#60a5fa">Menunggu Auth...</div>
     </div>
-    <button class="btn-sec" style="padding:4px 8px;font-size:11px;width:auto" onclick="toggleAuthModal()" id="auth-btn">Masuk</button>
+    <button class="btn-sec" style="padding:5px 9px;font-size:11px;width:auto" onclick="toggleAuthModal()" id="auth-btn">Masuk</button>
   </div>
 </aside>
 
@@ -171,15 +185,15 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
           <option value="">Semua Fasilitas</option>
           <option>SOLID</option><option>LIQUID</option><option>STERIL</option><option>SEFALOSPORIN</option><option>TOLL OUT</option><option>PROBIOTIK</option>
         </select>
-        <span id="dt" style="font-weight:500;color:var(--mu)"></span>
+        <span id="dt" style="font-weight:600;color:var(--mu);font-size:12px"></span>
       </div>
     </header>
 
     <section class="k4" id="kpi"></section>
 
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:12px;font-weight:700;color:var(--mu)">PERBAIKAN OPEN PER BAGIAN (Klik kotak untuk menyaring daftar di bawah)</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.3px;color:var(--mu);text-transform:uppercase">Perbaikan Open per Bagian (Klik kotak untuk menyaring daftar di bawah)</span>
         <button id="btn-reset-bag" class="btn btn-sec btn-sm" style="display:none" onclick="selectBagianFilter('')">Tampilkan Semua Bagian</button>
       </div>
       <section class="k6" id="bagian-cards"></section>
@@ -187,7 +201,7 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
 
     <div class="card">
       <h3>
-        <span id="dash-list-title">DAFTAR PERBAIKAN OPEN (Semua Bagian)</span>
+        <span id="dash-list-title">DAFTAR PERBAIKAN OPEN — SEMUA BAGIAN</span>
         <span style="font-size:11px;font-weight:500;color:var(--mu)">Diurutkan dari umur terlama</span>
       </h3>
       <div class="sc" id="tb-dash-open"></div>
@@ -197,7 +211,7 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
   <!-- 2. MONITORING LENGKAP -->
   <section id="page-monitoring" class="page">
     <header>
-      <div><h1>MONITORING PERBAIKAN</h1><p>Posisi Open teratas berdasarkan umur terlama. Admin & SPV dapat langsung update status atau edit data.</p></div>
+      <div><h1>MONITORING PERBAIKAN</h1><p>Posisi Open teratas berdasarkan umur terlama. Pengguna yang sudah login dapat langsung update status atau edit data.</p></div>
       <div class="hr">
         <input type="text" id="search-mon" style="width:180px" placeholder="Cari no. bets, produk..." oninput="renderMonitoring()">
         <select id="fil-mon-status" style="width:auto" onchange="renderMonitoring()">
@@ -225,18 +239,18 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
   <!-- 3. ANALITIK & REKAP BULANAN -->
   <section id="page-analitik" class="page">
     <header>
-      <div><h1>REKAP BULANAN & PERBANDINGAN RILIS</h1><p>Perbandingan jumlah perbaikan terhadap total bets yang dirilis per bulan (terhubung ke koleksi <code>batches</code>)</p></div>
+      <div><h1>REKAP BULANAN & PERBANDINGAN RILIS</h1><p>Perbandingan jumlah perbaikan terhadap total bets yang dirilis per bulan</p></div>
     </header>
     <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:16px">
       <div class="card">
         <h3>Data Bets Rilis Bulanan</h3>
-        <p style="font-size:11px;color:var(--mu);margin-bottom:12px">Otomatis membaca koleksi <code>batches</code> di workspace jika tersedia, atau isi manual sebagai override/penyesuaian.</p>
+        <p style="font-size:11px;color:var(--mu);margin-bottom:12px">Otomatis membaca data bets/cycle time jika tersedia, atau isi manual sebagai override/penyesuaian.</p>
         <div style="display:flex;flex-direction:column;gap:10px">
           <label style="font-size:11px;color:var(--mu);font-weight:600">Pilih Bulan
             <input type="month" id="rel-month" onchange="renderAnalitik()" style="margin-top:4px">
           </label>
           <label style="font-size:11px;color:var(--mu);font-weight:600">Jumlah Bets Rilis Manual (Opsional Override)
-            <input type="number" id="rel-count" placeholder="Kosongkan untuk pakai data batches" style="margin-top:4px">
+            <input type="number" id="rel-count" placeholder="Kosongkan untuk pakai data otomatis" style="margin-top:4px">
           </label>
           <button class="btn" id="btn-save-release" onclick="saveMonthlyRelease()">Simpan Jumlah Rilis</button>
         </div>
@@ -251,7 +265,7 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
   <!-- 4. PENGATURAN -->
   <section id="page-pengaturan" class="page">
     <header>
-      <div><h1>PENGATURAN MASTER DATA</h1><p>Kelola daftar sub-kategori dan parameter batas umur perbaikan (Supervisor)</p></div>
+      <div><h1>PENGATURAN MASTER DATA</h1><p>Kelola daftar sub-kategori dan parameter batas umur perbaikan</p></div>
     </header>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="card">
@@ -294,7 +308,8 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
           <input type="date" id="f_tgl_kirim" required>
         </label>
         <label>No. Bets
-          <input type="text" id="f_bets" required placeholder="Contoh: 30426" oninput="lookupBatchInfo()">
+          <input type="text" id="f_bets" required placeholder="Contoh: 30426" oninput="lookupBatchInfo()" list="batch-datalist">
+          <datalist id="batch-datalist"></datalist>
         </label>
         <label>Fasilitas
           <select id="f_fas">
@@ -323,11 +338,11 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
   </form>
 </div>
 
-<!-- MODAL LOGIN FIREBASE AUTH + PERAN -->
+<!-- MODAL LOGIN FIREBASE AUTH -->
 <div class="scrim" id="modal-auth" onclick="if(event.target===this)toggleAuthModal()">
 <div class="card" style="width:100%;max-width:380px">
   <h3>Masuk Sistem (Firebase Auth)</h3>
-  <p style="color:var(--mu);font-size:11px;margin-bottom:10px">Masuk dengan akun Firebase agar akses Firestore <code>/workspaces/main</code> aktif.</p>
+  <p style="color:var(--mu);font-size:11.5px;margin-bottom:12px">Masuk dengan akun Firebase untuk mengakses seluruh fitur dan sinkronisasi Firestore <code>/workspaces/main</code>.</p>
 
   <div class="auth-tabs">
     <button type="button" id="tab-auth-email" class="active" onclick="switchAuthTab('email')">Email / Password</button>
@@ -346,13 +361,8 @@ td select{padding:3px 6px;font-size:11px;font-weight:600;width:auto}
 
   <div id="auth-error" style="color:var(--r);font-size:11px;margin-bottom:8px;min-height:14px"></div>
 
-  <div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:4px">
-    <div style="font-size:11px;color:var(--mu);font-weight:600;margin-bottom:6px">Level Akses Kerja:</div>
-    <div style="display:flex;gap:6px">
-      <button type="button" class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="setWorkRole('admin')">Admin</button>
-      <button type="button" class="btn btn-sec btn-sm" style="flex:1;justify-content:center" onclick="setWorkRole('supervisor')">Supervisor</button>
-      <button type="button" class="btn btn-danger btn-sm" id="btn-logout" style="display:none;justify-content:center" onclick="logoutFirebase()">Keluar</button>
-    </div>
+  <div id="logout-wrap" style="display:none;border-top:1px solid var(--bd);padding-top:10px;margin-top:4px;justify-content:flex-end">
+    <button type="button" class="btn btn-danger btn-sm" onclick="logoutFirebase()">Keluar Akun</button>
   </div>
 </div></div>
 
@@ -388,6 +398,8 @@ const logsCol = () => collection(db, ...WORKSPACE_ROOT, "brft_logs");
 const metaCol = () => collection(db, ...WORKSPACE_ROOT, "brft_meta");
 const batchesCol = () => collection(db, ...WORKSPACE_ROOT, "batches");
 const productsCol = () => collection(db, ...WORKSPACE_ROOT, "products");
+const cycleTimeCol = () => collection(db, ...WORKSPACE_ROOT, "cycle_time");
+const cycleTimeCamelCol = () => collection(db, ...WORKSPACE_ROOT, "cycleTime");
 
 let CFG = { maxDays: 3 };
 const BAGIAN_LIST = ['PN1', 'PN2', 'MC', 'QC', 'WH', 'PC'];
@@ -405,6 +417,7 @@ let SUB_KATEGORI = [
 let MONTHLY_RELEASE = {};
 let WORKSPACE_BATCHES = [];
 let WORKSPACE_PRODUCTS = [];
+let CYCLE_TIME_DOCS = [];
 
 let R = [
   { id:'1', tglKirim:'2026-11-01', tglKembali:'2026-11-02', fas:'SOLID', bag:'PN2', subBag:'PP', prod:'Apialys Sirup 100ml', bets:'30426', kat:'Ketidaklengkapan Pengisian', sub:'Paraf / Inisial', ket:'Paraf operator pengisian belum lengkap', st:'Close', usr:'Admin QA' },
@@ -416,7 +429,7 @@ let R = [
 
 let L = R.map((r, i) => ({ id: `log-${i + 1}`, tgl: r.tglKirim, jam: '08:00', usr: r.usr, aksi: 'Input data', ref: r.bets, st: r.st }));
 let authUser = null;
-let workRole = 'admin';
+let isLoggedIn = false;
 let currentUser = { role: 'public', name: 'Publik', initial: 'PUB' };
 let selectedBagian = '';
 let monitorTabActive = 1;
@@ -427,7 +440,7 @@ const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const nowTime = () => new Date().toTimeString().slice(0, 5);
 
-function setSyncStatus(text, color = '#2b9fd1') {
+function setSyncStatus(text, color = '#60a5fa') {
   const el = $('sync-status');
   if (el) {
     el.textContent = text;
@@ -455,32 +468,27 @@ try {
 
 function syncRoleUI() {
   if (!authUser) {
+    isLoggedIn = false;
     currentUser = { role: 'public', name: 'Publik', initial: 'PUB' };
     $('user-name').textContent = 'Publik';
     $('user-role').textContent = 'Belum Login';
     $('auth-btn').textContent = 'Masuk';
     $('user-initial').textContent = 'PUB';
-    $('btn-logout').style.display = 'none';
+    $('logout-wrap').style.display = 'none';
   } else {
+    isLoggedIn = true;
     const label = authUser.displayName || authUser.email || 'Pengguna';
-    const shortInit = (authUser.email || 'US').slice(0, 2).toUpperCase();
-    currentUser = {
-      role: workRole,
-      name: `${label} (${workRole === 'supervisor' ? 'SPV' : 'Admin'})`,
-      initial: shortInit
-    };
+    const shortInit = (authUser.email || label || 'US').slice(0, 2).toUpperCase();
+    currentUser = { role: 'user', name: label, initial: shortInit };
     $('user-name').textContent = label;
-    $('user-role').textContent = workRole.toUpperCase();
+    $('user-role').textContent = 'Terlogin';
     $('user-initial').textContent = shortInit;
     $('auth-btn').textContent = 'Akun';
-    $('btn-logout').style.display = 'inline-flex';
+    $('logout-wrap').style.display = 'flex';
   }
 
-  $('nav-input').style.display = (currentUser.role === 'public') ? 'none' : 'flex';
-  $('nav-settings').style.display = (currentUser.role === 'supervisor') ? 'flex' : 'none';
-  if (currentUser.role !== 'supervisor' && (location.hash.replace('#', '') === 'pengaturan')) {
-    navigate('dashboard');
-  }
+  $('nav-input').style.display = isLoggedIn ? 'flex' : 'none';
+  $('nav-settings').style.display = isLoggedIn ? 'flex' : 'none';
 }
 
 window.switchAuthTab = function(tab) {
@@ -521,36 +529,42 @@ window.logoutFirebase = async function() {
   }
 };
 
-window.setWorkRole = function(role) {
-  workRole = role;
-  syncRoleUI();
-  rerenderCurrentPage();
-};
-
 function clearFirestoreSubs() {
   unsubs.forEach(fn => { try { fn(); } catch (e) {} });
   unsubs = [];
 }
 
+function refreshBatchDatalist() {
+  const dl = $('batch-datalist');
+  if (!dl) return;
+  const set = new Set();
+  [...CYCLE_TIME_DOCS, ...WORKSPACE_BATCHES, ...R].forEach(item => {
+    const code = extractBatchCode(item);
+    if (code) set.add(code);
+  });
+  dl.innerHTML = Array.from(set).slice(0, 200).map(b => `<option value="${esc(b)}"></option>`).join('');
+}
+
 function subscribeFirestore() {
   clearFirestoreSubs();
   if (!authUser) {
-    setSyncStatus('Login utk Sync', '#ea7c2b');
+    setSyncStatus('Login utk Sync', '#f59e0b');
     return;
   }
 
-  setSyncStatus('Menghubungkan...', '#2b9fd1');
+  setSyncStatus('Menghubungkan...', '#60a5fa');
 
   unsubs.push(onSnapshot(repairsCol(), (snap) => {
     if (!snap.empty) {
       R = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       persistLocal();
+      refreshBatchDatalist();
       rerenderCurrentPage();
     }
-    setSyncStatus('Firestore Sync Aktif', '#16a34a');
+    setSyncStatus('Firestore Sync Aktif', '#4ade80');
   }, (err) => {
     console.warn('Snapshot brft_repairs:', err);
-    setSyncStatus('Cek Firestore Rules', '#dc3a3a');
+    setSyncStatus('Cek Firestore Rules', '#f87171');
   }));
 
   unsubs.push(onSnapshot(logsCol(), (snap) => {
@@ -581,14 +595,34 @@ function subscribeFirestore() {
 
   unsubs.push(onSnapshot(batchesCol(), (snap) => {
     WORKSPACE_BATCHES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    refreshBatchDatalist();
     if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
       renderAnalitik();
     }
-  }));
+  }, () => {}));
 
   unsubs.push(onSnapshot(productsCol(), (snap) => {
     WORKSPACE_PRODUCTS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  }));
+  }, () => {}));
+
+  unsubs.push(onSnapshot(cycleTimeCol(), (snap) => {
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    CYCLE_TIME_DOCS = [...WORKSPACE_BATCHES.filter(x => x._src === 'cycleTimeCamel'), ...docs];
+    refreshBatchDatalist();
+    if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
+      renderAnalitik();
+    }
+  }, () => {}));
+
+  unsubs.push(onSnapshot(cycleTimeCamelCol(), (snap) => {
+    const camelDocs = snap.docs.map(d => ({ id: d.id, ...d.data(), _src: 'cycleTimeCamel' }));
+    const nonCamel = CYCLE_TIME_DOCS.filter(x => x._src !== 'cycleTimeCamel');
+    CYCLE_TIME_DOCS = [...nonCamel, ...camelDocs];
+    refreshBatchDatalist();
+    if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
+      renderAnalitik();
+    }
+  }, () => {}));
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -601,16 +635,16 @@ onAuthStateChanged(auth, (user) => {
 async function saveRepairDoc(record) {
   persistLocal();
   if (!authUser) {
-    setSyncStatus('Lokal (Belum Login)', '#ea7c2b');
+    setSyncStatus('Lokal (Belum Login)', '#f59e0b');
     return;
   }
   try {
-    setSyncStatus('Menyimpan...', '#ea7c2b');
+    setSyncStatus('Menyimpan...', '#f59e0b');
     await setDoc(doc(db, ...WORKSPACE_ROOT, 'brft_repairs', record.id), record);
-    setSyncStatus('Firestore Sync Aktif', '#16a34a');
+    setSyncStatus('Firestore Sync Aktif', '#4ade80');
   } catch (err) {
     console.warn('Firestore save brft_repairs:', err);
-    setSyncStatus('Gagal Sync (Rules)', '#dc3a3a');
+    setSyncStatus('Gagal Sync (Rules)', '#f87171');
   }
 }
 
@@ -630,63 +664,113 @@ async function saveLogEntry(entry) {
 async function saveMetaDoc(key, data) {
   persistLocal();
   if (!authUser) {
-    setSyncStatus('Lokal (Belum Login)', '#ea7c2b');
+    setSyncStatus('Lokal (Belum Login)', '#f59e0b');
     return;
   }
   try {
-    setSyncStatus('Menyimpan...', '#ea7c2b');
+    setSyncStatus('Menyimpan...', '#f59e0b');
     await setDoc(doc(db, ...WORKSPACE_ROOT, 'brft_meta', key), data);
-    setSyncStatus('Firestore Sync Aktif', '#16a34a');
+    setSyncStatus('Firestore Sync Aktif', '#4ade80');
   } catch (err) {
     console.warn('Firestore save brft_meta:', err);
-    setSyncStatus('Gagal Sync (Rules)', '#dc3a3a');
+    setSyncStatus('Gagal Sync (Rules)', '#f87171');
   }
 }
 
-// Auto-isi Produk & Fasilitas dari koleksi batches / products di /workspaces/main
+function extractBatchCode(docObj) {
+  if (!docObj || typeof docObj !== 'object') return '';
+  const candidates = [
+    docObj.batchNumber, docObj.batchNo, docObj.batch_number, docObj.batch_no,
+    docObj.noBets, docObj.no_bets, docObj.bets, docObj.kodeBets, docObj.kode_bets,
+    docObj.lotNumber, docObj.lot_no, docObj.batchCode, docObj.code
+  ];
+  for (const val of candidates) {
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      return String(val).trim();
+    }
+  }
+  return '';
+}
+
+function extractProductInfo(docObj) {
+  if (!docObj || typeof docObj !== 'object') return { name: '', facility: '' };
+  const rawProd = docObj.productName || docObj.namaProduk || docObj.product_name || docObj.nama_produk || docObj.product || docObj.produk || docObj.productId || '';
+  const matchedProd = WORKSPACE_PRODUCTS.find(p =>
+    String(p.id || '').toLowerCase() === String(docObj.productId || rawProd).toLowerCase() ||
+    String(p.code || p.kodeProduk || '').toLowerCase() === String(rawProd).toLowerCase() ||
+    String(p.name || p.namaProduk || '').toLowerCase() === String(rawProd).toLowerCase()
+  );
+  const name = matchedProd?.name || matchedProd?.namaProduk || matchedProd?.productName || String(rawProd || '');
+  const facility = docObj.facility || docObj.fasilitas || docObj.plant || matchedProd?.facility || matchedProd?.fasilitas || matchedProd?.plant || '';
+  return { name: String(name || ''), facility: String(facility || '') };
+}
+
+// Baca no. bets dari data cycle time & batches di workspace
 window.lookupBatchInfo = function() {
-  const rawBets = ($('f_bets').value || '').trim().toLowerCase();
+  const rawBets = ($('f_bets').value || '').trim();
   const hintEl = $('batch-lookup-hint');
   if (!rawBets) {
     hintEl.textContent = '';
     return;
   }
 
-  const matchedBatch = WORKSPACE_BATCHES.find(b =>
-    String(b.batchNumber || b.noBets || b.bets || b.code || b.id || '').trim().toLowerCase() === rawBets
-  );
+  const targetLower = rawBets.toLowerCase();
+  const pool = [...CYCLE_TIME_DOCS, ...WORKSPACE_BATCHES];
 
-  if (!matchedBatch) {
-    hintEl.textContent = 'No. bets tidak ditemukan di koleksi batches (dapat diisi manual).';
+  let matched = pool.find(item => extractBatchCode(item).toLowerCase() === targetLower);
+  if (!matched) {
+    matched = pool.find(item => {
+      const code = extractBatchCode(item).toLowerCase();
+      return code && (code.includes(targetLower) || targetLower.includes(code));
+    });
+  }
+
+  if (matched) {
+    const info = extractProductInfo(matched);
+    if (info.name && !$('f_prod').value.trim()) {
+      $('f_prod').value = info.name;
+    }
+    if (info.facility) {
+      const fasUpper = info.facility.toUpperCase();
+      const optExists = Array.from($('f_fas').options).some(o => o.value === fasUpper);
+      if (optExists) $('f_fas').value = fasUpper;
+    }
+    const foundCode = extractBatchCode(matched);
+    hintEl.textContent = `Terbaca dari cycle time / batches: ${foundCode}${info.name ? ' — ' + info.name : ''}`;
     return;
   }
 
-  const prodCodeOrName = matchedBatch.productName || matchedBatch.namaProduk || matchedBatch.product || matchedBatch.productId || '';
-  const matchedProd = WORKSPACE_PRODUCTS.find(p =>
-    String(p.id || '').toLowerCase() === String(matchedBatch.productId || '').toLowerCase() ||
-    String(p.name || p.namaProduk || '').toLowerCase() === String(prodCodeOrName).toLowerCase()
-  );
-
-  const finalProd = matchedProd?.name || matchedProd?.namaProduk || prodCodeOrName;
-  const finalFas = matchedBatch.facility || matchedBatch.fasilitas || matchedProd?.facility || matchedProd?.fasilitas || '';
-
-  if (finalProd && !$('f_prod').value.trim()) {
-    $('f_prod').value = finalProd;
+  // Fallback awalan 6 karakter (mis. AABBCC) dari produk/riwayat yang ada
+  if (rawBets.length >= 6) {
+    const prefix6 = rawBets.slice(0, 6).toLowerCase();
+    const prefixMatch = [...WORKSPACE_PRODUCTS, ...R].find(item =>
+      String(item.prefix || item.kodeProduk || item.code || item.bets || '').toLowerCase().startsWith(prefix6)
+    );
+    if (prefixMatch) {
+      const name = prefixMatch.name || prefixMatch.namaProduk || prefixMatch.prod || '';
+      if (name && !$('f_prod').value.trim()) {
+        $('f_prod').value = name;
+      }
+      hintEl.textContent = `Cocok awalan kode ${rawBets.slice(0, 6).toUpperCase()}${name ? ': ' + name : ''}.`;
+      return;
+    }
   }
-  if (finalFas) {
-    const fasUpper = String(finalFas).toUpperCase();
-    const optExists = Array.from($('f_fas').options).some(o => o.value === fasUpper);
-    if (optExists) $('f_fas').value = fasUpper;
-  }
-  hintEl.textContent = `Ditemukan di koleksi batches${finalProd ? ': ' + finalProd : ''}.`;
+
+  hintEl.textContent = 'No. bets belum ditemukan di data cycle time/batches (tetap bisa diisi manual).';
 };
 
 function countWorkspaceBatchesForMonth(monthStr) {
-  if (!monthStr || !WORKSPACE_BATCHES.length) return null;
-  return WORKSPACE_BATCHES.filter(b => {
-    const dt = String(b.releaseDate || b.tglRilis || b.createdAt || b.date || '');
-    return dt.startsWith(monthStr);
-  }).length;
+  if (!monthStr) return null;
+  const sourceList = CYCLE_TIME_DOCS.length ? CYCLE_TIME_DOCS : WORKSPACE_BATCHES;
+  if (!sourceList.length) return null;
+  const uniqueBatches = new Set();
+  sourceList.forEach(b => {
+    const dt = String(b.releaseDate || b.tglRilis || b.tglSelesai || b.completedAt || b.createdAt || b.date || '');
+    if (dt.startsWith(monthStr)) {
+      uniqueBatches.add(extractBatchCode(b) || b.id);
+    }
+  });
+  return uniqueBatches.size;
 }
 
 function rerenderCurrentPage() {
@@ -705,7 +789,6 @@ function calcAgeDays(r) {
 
 function navigate(hash) {
   if (!hash) hash = 'dashboard';
-  if (hash === 'pengaturan' && currentUser.role !== 'supervisor') hash = 'dashboard';
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('on'));
 
@@ -773,8 +856,6 @@ function renderDashboard() {
   const openList = D.filter(r => r.st === 'Open' && (!selectedBagian || r.bag === selectedBagian))
                     .sort((a, b) => calcAgeDays(b) - calcAgeDays(a));
 
-  const canEdit = currentUser.role !== 'public';
-
   $('tb-dash-open').innerHTML = openList.length ? `<table>
     <tr>
       <th>No. Bets</th>
@@ -785,7 +866,7 @@ function renderDashboard() {
       <th>Tgl Kirim</th>
       <th>Umur</th>
       <th>Status</th>
-      ${canEdit ? '<th>Aksi</th>' : ''}
+      ${isLoggedIn ? '<th>Aksi</th>' : ''}
     </tr>
     ${openList.map(r => {
       const age = calcAgeDays(r);
@@ -800,16 +881,16 @@ function renderDashboard() {
         <td>${esc(r.tglKirim)}</td>
         <td style="color:${isLate ? 'var(--r)' : 'inherit'};font-weight:${isLate ? '700' : '400'}">${age} hari</td>
         <td>
-          <select onchange="quickUpdateStatus('${r.id}', this.value)" ${!canEdit ? 'disabled' : ''}>
+          <select onchange="quickUpdateStatus('${r.id}', this.value)" ${!isLoggedIn ? 'disabled' : ''}>
             <option value="Open" selected>Open</option>
             <option value="Close">Close</option>
             <option value="Konfirmasi">Konfirmasi</option>
           </select>
         </td>
-        ${canEdit ? `<td><button class="btn btn-sec btn-sm" onclick="openFormModal('${r.id}')">Edit</button></td>` : ''}
+        ${isLoggedIn ? `<td><button class="btn btn-sec btn-sm" onclick="openFormModal('${r.id}')">Edit</button></td>` : ''}
       </tr>`;
     }).join('')}
-  </table>` : `<p style="padding:16px;color:var(--mu);text-align:center">Tidak ada perbaikan berstatus Open ${selectedBagian ? 'pada bagian ' + selectedBagian : ''}.</p>`;
+  </table>` : `<p style="padding:18px;color:var(--mu);text-align:center">Tidak ada perbaikan berstatus Open ${selectedBagian ? 'pada bagian ' + selectedBagian : ''}.</p>`;
 
   $('dt').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
@@ -843,8 +924,6 @@ window.renderMonitoring = function() {
     return calcAgeDays(b) - calcAgeDays(a);
   });
 
-  const canEdit = currentUser.role !== 'public';
-
   $('tb-monitoring').innerHTML = D.length ? `<table>
     <tr>
       <th>Status</th>
@@ -856,7 +935,7 @@ window.renderMonitoring = function() {
       <th>Tgl Kirim</th>
       <th>Tgl Kembali</th>
       <th>Umur</th>
-      ${canEdit ? '<th>Aksi</th>' : ''}
+      ${isLoggedIn ? '<th>Aksi</th>' : ''}
     </tr>
     ${D.map(r => {
       const age = calcAgeDays(r);
@@ -864,7 +943,7 @@ window.renderMonitoring = function() {
       const bagDisplay = r.subBag ? `${r.bag} (${r.subBag})` : r.bag;
       return `<tr>
         <td>
-          <select onchange="quickUpdateStatus('${r.id}', this.value)" ${!canEdit ? 'disabled' : ''}>
+          <select onchange="quickUpdateStatus('${r.id}', this.value)" ${!isLoggedIn ? 'disabled' : ''}>
             <option value="Open" ${r.st === 'Open' ? 'selected' : ''}>Open</option>
             <option value="Close" ${r.st === 'Close' ? 'selected' : ''}>Close</option>
             <option value="Konfirmasi" ${r.st === 'Konfirmasi' ? 'selected' : ''}>Konfirmasi</option>
@@ -878,10 +957,10 @@ window.renderMonitoring = function() {
         <td>${esc(r.tglKirim)}</td>
         <td>${r.tglKembali ? esc(r.tglKembali) : '<span style="color:var(--mu)">-</span>'}</td>
         <td style="color:${isLate ? 'var(--r)' : 'inherit'};font-weight:${isLate ? '700' : '400'}">${age} hari</td>
-        ${canEdit ? `<td><button class="btn btn-sec btn-sm" onclick="openFormModal('${r.id}')">Edit</button></td>` : ''}
+        ${isLoggedIn ? `<td><button class="btn btn-sec btn-sm" onclick="openFormModal('${r.id}')">Edit</button></td>` : ''}
       </tr>`;
     }).join('')}
-  </table>` : `<p style="padding:16px;color:var(--mu);text-align:center">Tidak ada data ditemukan.</p>`;
+  </table>` : `<p style="padding:18px;color:var(--mu);text-align:center">Tidak ada data ditemukan.</p>`;
 };
 
 window.setMonitorTab = function(n) {
@@ -897,7 +976,7 @@ window.setMonitorTab = function(n) {
 };
 
 window.quickUpdateStatus = async function(id, newStatus) {
-  if (currentUser.role === 'public') return;
+  if (!isLoggedIn) return;
   const r = R.find(x => x.id === id);
   if (!r) return;
 
@@ -921,7 +1000,7 @@ window.quickUpdateStatus = async function(id, newStatus) {
 };
 
 window.saveMonthlyRelease = async function() {
-  if (currentUser.role === 'public') {
+  if (!isLoggedIn) {
     alert('Silakan masuk terlebih dahulu untuk menyimpan data rilis bulanan.');
     return;
   }
@@ -958,10 +1037,10 @@ window.renderAnalitik = function() {
   const releasedCount = typeof overrideCount === 'number' ? overrideCount : (autoBatchCount || 0);
   const sourceLabel = typeof overrideCount === 'number'
     ? 'Manual override'
-    : (autoBatchCount !== null ? 'Koleksi batches' : 'Belum ada data');
+    : (autoBatchCount !== null ? 'Data cycle time / batches' : 'Belum ada data');
 
   $('rel-count').value = typeof overrideCount === 'number' ? overrideCount : '';
-  $('btn-save-release').disabled = (currentUser.role === 'public');
+  $('btn-save-release').disabled = !isLoggedIn;
 
   const monthRecords = R.filter(r => r.tglKirim.startsWith(selectedMonth));
   const actualPerbaikan = monthRecords.filter(r => r.st === 'Open' || r.st === 'Close').length;
@@ -1117,11 +1196,12 @@ window.onRowStatusChange = function(selEl) {
 };
 
 window.openFormModal = function(editId = null) {
-  if (currentUser.role === 'public') {
+  if (!isLoggedIn) {
     alert('Silakan masuk terlebih dahulu dengan akun Firebase Anda.');
     return;
   }
 
+  refreshBatchDatalist();
   rowCounter = 0;
   const container = $('repair-items-container');
   container.innerHTML = '';
@@ -1229,7 +1309,7 @@ function loadSettingsForm() {
 
 function renderSubKategoriList() {
   $('list-subkat').innerHTML = SUB_KATEGORI.map((s, idx) => `
-    <li style="display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid var(--bd);font-size:12px;">
+    <li style="display:flex;justify-content:space-between;align-items:center;padding:8px 6px;border-bottom:1px solid var(--bd);font-size:12px;">
       <span>${esc(s)}</span>
       <button class="btn btn-sec btn-sm" style="color:var(--r);width:auto" onclick="removeSubKategori(${idx})">Hapus</button>
     </li>
@@ -1255,7 +1335,7 @@ window.removeSubKategori = async function(idx) {
 
 window.saveSettings = async function(e) {
   e.preventDefault();
-  if (currentUser.role !== 'supervisor') return;
+  if (!isLoggedIn) return;
   CFG.maxDays = parseInt($('cfg-days').value, 10) || 3;
   await saveMetaDoc('config', CFG);
   alert('Pengaturan berhasil disimpan.');
@@ -1283,6 +1363,7 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener('DOMContentLoaded', () => {
   syncRoleUI();
+  refreshBatchDatalist();
   const initialHash = location.hash.replace('#', '') || 'dashboard';
   navigate(initialHash);
 });
