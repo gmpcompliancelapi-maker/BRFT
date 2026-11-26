@@ -153,6 +153,7 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
 .batch-grid label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:#475569;font-weight:700}
 .item-box{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
 .item-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+.td-ket{min-width:220px;max-width:340px;white-space:normal;line-height:1.45}
 .item-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .item-fields label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#475569;font-weight:700}
 .item-fields .c2{grid-column:span 2}.item-fields .c4{grid-column:span 4}
@@ -1077,6 +1078,7 @@ function renderDashboard() {
       <th>Fasilitas</th>
       <th>Bagian</th>
       <th>Sub Kategori</th>
+      <th>Keterangan Perbaikan</th>
       <th>Penanggung Jawab</th>
       <th>Tgl Kirim</th>
       <th>Umur</th>
@@ -1093,6 +1095,7 @@ function renderDashboard() {
         <td>${esc(r.fas)}</td>
         <td><span class="chip">${esc(bagDisplay)}</span></td>
         <td>${esc(r.sub)}</td>
+        <td class="td-ket">${r.ket ? esc(r.ket) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${r.pic ? esc(r.pic) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${esc(r.tglKirim)}</td>
         <td>${ageCell(age, r.st === 'Open')}</td>
@@ -1130,7 +1133,7 @@ window.renderMonitoring = function() {
   let D = R.filter(r =>
     (!f || r.fas === f) &&
     (!stFilter || r.st === stFilter) &&
-    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q) || String(r.pic || '').toLowerCase().includes(q))
+    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q) || String(r.pic || '').toLowerCase().includes(q) || String(r.ket || '').toLowerCase().includes(q))
   );
 
   D.sort((a, b) => {
@@ -1148,6 +1151,7 @@ window.renderMonitoring = function() {
       <th>Fasilitas</th>
       <th>Bagian</th>
       <th>Sub Kategori</th>
+      <th>Keterangan Perbaikan</th>
       <th>Penanggung Jawab</th>
       <th>Tgl Kirim</th>
       <th>Tgl Kembali</th>
@@ -1171,6 +1175,7 @@ window.renderMonitoring = function() {
         <td>${esc(r.fas)}</td>
         <td>${esc(bagDisplay)}</td>
         <td>${esc(r.sub)}</td>
+        <td class="td-ket">${r.ket ? esc(r.ket) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${r.pic ? esc(r.pic) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${esc(r.tglKirim)}</td>
         <td>${r.tglKembali ? esc(r.tglKembali) : '<span style="color:var(--muted)">-</span>'}</td>
