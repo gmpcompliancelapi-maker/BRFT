@@ -602,15 +602,15 @@ td select{padding:4px 8px;font-size:11px;font-weight:700;width:auto;border-radiu
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
   GoogleAuthProvider, signInWithPopup, signOut
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, setDoc, onSnapshot
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBCgauuitX89coLfFSd6hBG1wR8NfebBSg",
@@ -633,8 +633,6 @@ const logsCol = () => collection(db, ...WORKSPACE_ROOT, "brft_logs");
 const metaCol = () => collection(db, ...WORKSPACE_ROOT, "brft_meta");
 const batchesCol = () => collection(db, ...WORKSPACE_ROOT, "batches");
 const productsCol = () => collection(db, ...WORKSPACE_ROOT, "products");
-const cycleTimeCol = () => collection(db, ...WORKSPACE_ROOT, "cycle_time");
-const cycleTimeCamelCol = () => collection(db, ...WORKSPACE_ROOT, "cycleTime");
 
 let CFG = { maxDays: 3 };
 const BAGIAN_LIST = ['PN1', 'PN2', 'MC', 'QC', 'WH', 'PC'];
@@ -652,7 +650,6 @@ let SUB_KATEGORI = [
 let MONTHLY_RELEASE = {};
 let WORKSPACE_BATCHES = [];
 let WORKSPACE_PRODUCTS = [];
-let CYCLE_TIME_DOCS = [];
 
 let R = [
   { id:'1', tglKirim:'2026-11-01', tglKembali:'2026-11-02', fas:'SOLID', bag:'PN2', subBag:'PP', prod:'Apialys Sirup 100ml', bets:'30426', kat:'Ketidaklengkapan Pengisian', sub:'Paraf / Inisial', ket:'Paraf operator pengisian belum lengkap', st:'Close', usr:'Admin QA' },
@@ -781,15 +778,53 @@ function extractBatchCode(docObj) {
   return '';
 }
 
+function unpackWorkspaceDoc(raw) {
+  if (!raw || typeof raw !== 'object') return raw;
+  let parsed = {};
+  if (typeof raw.data === 'string' && raw.data.trim()) {
+    try {
+      const obj = JSON.parse(raw.data);
+      if (obj && typeof obj === 'object') parsed = obj;
+    } catch (e) {}
+  } else if (raw.data && typeof raw.data === 'object') {
+    parsed = raw.data;
+  }
+  const fallbackName = typeof parsed.batchName === 'string'
+    ? parsed.batchName.split(' — Bets ')[0].trim()
+    : '';
+  return {
+    ...parsed,
+    ...raw,
+    id: raw.id ?? parsed.id,
+    batchNo: raw.batchNo ?? parsed.batchNo ?? parsed.batch_no ?? '',
+    productName: raw.productName ?? parsed.productName ?? fallbackName ?? '',
+    batchName: raw.batchName ?? parsed.batchName ?? '',
+    dpjTime: raw.dpjTime ?? parsed.dpjTime ?? '',
+    docs: raw.docs ?? parsed.docs ?? null
+  };
+}
+
 function extractProductInfo(docObj) {
   if (!docObj || typeof docObj !== 'object') return { name: '', facility: '' };
-  const rawProd = docObj.productName || docObj.namaProduk || docObj.product_name || docObj.nama_produk || docObj.product || docObj.produk || docObj.productId || '';
+  const rawProd =
+    docObj.productName ||
+    docObj.namaProduk ||
+    docObj.product_name ||
+    docObj.nama_produk ||
+    (typeof docObj.batchName === 'string' ? docObj.batchName.split(' — Bets ')[0] : '') ||
+    docObj.product ||
+    docObj.produk ||
+    docObj.productId ||
+    '';
+
+  const codeAA = extractBatchCode(docObj).slice(0, 2).toUpperCase();
   const matchedProd = WORKSPACE_PRODUCTS.find(p =>
     String(p.id || '').toLowerCase() === String(docObj.productId || rawProd).toLowerCase() ||
+    (codeAA && String(p.codeAA || '').toUpperCase() === codeAA) ||
     String(p.code || p.kodeProduk || '').toLowerCase() === String(rawProd).toLowerCase() ||
     String(p.name || p.namaProduk || '').toLowerCase() === String(rawProd).toLowerCase()
   );
-  const name = matchedProd?.name || matchedProd?.namaProduk || matchedProd?.productName || String(rawProd || '');
+  const name = matchedProd?.name || matchedProd?.namaProduk || matchedProd?.productName || String(rawProd || '').trim();
   const facility = docObj.facility || docObj.fasilitas || docObj.plant || matchedProd?.facility || matchedProd?.fasilitas || matchedProd?.plant || '';
   return { name: String(name || ''), facility: String(facility || '') };
 }
@@ -798,11 +833,11 @@ function refreshBatchDatalist() {
   const dl = $('batch-datalist');
   if (!dl) return;
   const set = new Set();
-  [...CYCLE_TIME_DOCS, ...WORKSPACE_BATCHES, ...R].forEach(item => {
+  [...WORKSPACE_BATCHES, ...R].forEach(item => {
     const code = extractBatchCode(item);
     if (code) set.add(code);
   });
-  dl.innerHTML = Array.from(set).slice(0, 200).map(b => `<option value="${esc(b)}"></option>`).join('');
+  dl.innerHTML = Array.from(set).slice(0, 300).map(b => `<option value="${esc(b)}"></option>`).join('');
 }
 
 function subscribeFirestore() {
@@ -853,7 +888,7 @@ function subscribeFirestore() {
   }, () => {}));
 
   unsubs.push(onSnapshot(batchesCol(), (snap) => {
-    WORKSPACE_BATCHES = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    WORKSPACE_BATCHES = snap.docs.map(d => unpackWorkspaceDoc({ id: d.id, ...d.data() }));
     refreshBatchDatalist();
     if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
       renderAnalitik();
@@ -861,25 +896,8 @@ function subscribeFirestore() {
   }, () => {}));
 
   unsubs.push(onSnapshot(productsCol(), (snap) => {
-    WORKSPACE_PRODUCTS = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  }, () => {}));
-
-  unsubs.push(onSnapshot(cycleTimeCol(), (snap) => {
-    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    CYCLE_TIME_DOCS = [...CYCLE_TIME_DOCS.filter(x => x._src === 'cycleTimeCamel'), ...docs];
+    WORKSPACE_PRODUCTS = snap.docs.map(d => unpackWorkspaceDoc({ id: d.id, ...d.data() }));
     refreshBatchDatalist();
-    if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
-      renderAnalitik();
-    }
-  }, () => {}));
-
-  unsubs.push(onSnapshot(cycleTimeCamelCol(), (snap) => {
-    const camelDocs = snap.docs.map(d => ({ id: d.id, ...d.data(), _src: 'cycleTimeCamel' }));
-    CYCLE_TIME_DOCS = [...CYCLE_TIME_DOCS.filter(x => x._src !== 'cycleTimeCamel'), ...camelDocs];
-    refreshBatchDatalist();
-    if ((location.hash.replace('#', '') || 'dashboard') === 'analitik') {
-      renderAnalitik();
-    }
   }, () => {}));
 }
 
@@ -944,7 +962,7 @@ window.lookupBatchInfo = function() {
   }
 
   const targetLower = rawBets.toLowerCase();
-  const pool = [...CYCLE_TIME_DOCS, ...WORKSPACE_BATCHES];
+  const pool = [...WORKSPACE_BATCHES];
 
   let matched = pool.find(item => extractBatchCode(item).toLowerCase() === targetLower);
   if (!matched) {
@@ -969,17 +987,17 @@ window.lookupBatchInfo = function() {
     return;
   }
 
-  if (rawBets.length >= 6) {
-    const prefix6 = rawBets.slice(0, 6).toLowerCase();
-    const prefixMatch = [...WORKSPACE_PRODUCTS, ...R].find(item =>
-      String(item.prefix || item.kodeProduk || item.code || item.bets || '').toLowerCase().startsWith(prefix6)
+  if (rawBets.length >= 2) {
+    const aa = rawBets.slice(0, 2).toUpperCase();
+    const aaMatch = WORKSPACE_PRODUCTS.find(item =>
+      String(item.codeAA || '').trim().toUpperCase() === aa
     );
-    if (prefixMatch) {
-      const name = prefixMatch.name || prefixMatch.namaProduk || prefixMatch.prod || '';
+    if (aaMatch) {
+      const name = aaMatch.name || aaMatch.namaProduk || '';
       if (name && !$('f_prod').value.trim()) {
         $('f_prod').value = name;
       }
-      hintEl.textContent = `Cocok awalan kode ${rawBets.slice(0, 6).toUpperCase()}${name ? ': ' + name : ''}.`;
+      hintEl.textContent = `Cocok kode produk AA (${aa}) dari Master Cycle Time${name ? ': ' + name : ''}.`;
       return;
     }
   }
@@ -989,11 +1007,12 @@ window.lookupBatchInfo = function() {
 
 function countWorkspaceBatchesForMonth(monthStr) {
   if (!monthStr) return null;
-  const sourceList = CYCLE_TIME_DOCS.length ? CYCLE_TIME_DOCS : WORKSPACE_BATCHES;
-  if (!sourceList.length) return null;
+  if (!WORKSPACE_BATCHES.length) return null;
   const uniqueBatches = new Set();
-  sourceList.forEach(b => {
-    const dt = String(b.releaseDate || b.tglRilis || b.tglSelesai || b.completedAt || b.createdAt || b.date || '');
+  WORKSPACE_BATCHES.forEach(b => {
+    const dt = String(
+      b.dpjTime || b.releaseDate || b.tglRilis || b.tglSelesai || b.completedAt || b.createdAt || b.date || ''
+    );
     if (dt.startsWith(monthStr)) {
       uniqueBatches.add(extractBatchCode(b) || b.id);
     }
