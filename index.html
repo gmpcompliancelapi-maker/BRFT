@@ -157,6 +157,23 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
 .item-fields label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#475569;font-weight:700}
 .item-fields .c2{grid-column:span 2}.item-fields .c4{grid-column:span 4}
 .hint-txt{font-size:11.5px;color:var(--accent-2);margin-top:6px;min-height:15px;font-weight:600}
+.batch-grid .field{display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:#475569;font-weight:700}
+.combo{position:relative}
+.combo-list{display:none;position:absolute;z-index:60;left:0;top:100%;margin-top:4px;min-width:min(380px,86vw);max-height:280px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 28px rgba(15,23,42,.18)}
+.combo-list.on{display:block}
+.combo-item{padding:8px 10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line-soft);font-weight:600;color:var(--ink)}
+.combo-item:last-child{border-bottom:0}
+.combo-item:hover,.combo-item.act{background:var(--accent-soft)}
+.combo-item small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+.combo-empty{padding:10px;color:var(--muted);font-size:12px;font-weight:500}
+.st-chip{display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap;border:1px solid transparent}
+.st-released{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+.st-ready{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+.st-progress{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}
+.st-manual{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
+.manual-toggle{display:flex;align-items:center;gap:6px;font-weight:600;font-size:11px;color:#475569;margin-top:2px}
+.manual-toggle input{width:auto}
+#f_prod[readonly]{background:#f1f5f9;color:#334155}
 .auth-mode-switch{display:flex;gap:4px;background:var(--line-soft);padding:4px;border-radius:12px}
 .auth-mode-switch button{flex:1;padding:6px;font-size:12px;border-radius:8px;border:0;background:transparent;color:#475569;cursor:pointer;font-weight:700;font-family:inherit}
 .auth-mode-switch button.on{background:#fff;color:var(--accent-2);box-shadow:0 1px 2px rgba(15,23,42,.1)}
@@ -304,13 +321,13 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
           <small>Otomatis / Override</small>
         </div>
         <p style="font-size:12px;color:var(--muted);margin-bottom:12px">
-          Membaca jumlah bets dari data <em>cycle time</em>/<em>batches</em> bila tersedia, atau simpan angka manual per bulan.
+          Jumlah bets rilis dihitung <strong>otomatis</strong> dari Cycle Time: satu bets dihitung rilis saat <em>Save DPJ</em> selesai. Angka manual hanya untuk koreksi dan akan menggantikan hitungan otomatis.
         </p>
         <div style="display:flex;flex-direction:column;gap:10px">
           <label style="font-size:11.5px;color:var(--muted);font-weight:700">Pilih Bulan
             <input type="month" id="rel-month" onchange="renderAnalitik()" style="margin-top:4px">
           </label>
-          <label style="font-size:11.5px;color:var(--muted);font-weight:700">Jumlah Bets Rilis Manual (Opsional)
+          <label style="font-size:11.5px;color:var(--muted);font-weight:700">Koreksi Manual Jumlah Bets Rilis (Opsional)
             <input type="number" id="rel-count" min="0" placeholder="Kosongkan untuk pakai otomatis" style="margin-top:4px">
           </label>
           <button type="button" class="btn" id="btn-save-release" onclick="saveMonthlyRelease()">Simpan Jumlah Rilis</button>
@@ -383,10 +400,15 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
         <label>Tanggal Kirim Perbaikan
           <input type="date" id="f_tgl_kirim" required>
         </label>
-        <label>No. Bets
-          <input type="text" id="f_bets" required placeholder="Contoh: 30426" oninput="lookupBatchInfo()" list="batch-datalist">
-          <datalist id="batch-datalist"></datalist>
-        </label>
+        <div class="field">
+          <span>No. Bets (dari Cycle Time)</span>
+          <div class="combo" id="bets-combo">
+            <input type="text" id="f_bets" required autocomplete="off" autocapitalize="characters" placeholder="Cari No. Bets…" oninput="onBetsInput()" onfocus="onBetsFocus()" onkeydown="onBetsKeydown(event)">
+            <div class="combo-list" id="bets-list" role="listbox"></div>
+          </div>
+          <input type="hidden" id="f_batch_id">
+          <label class="manual-toggle"><input type="checkbox" id="f_manual" onchange="onManualToggle()"> Bets belum ada di Cycle Time (input manual)</label>
+        </div>
         <label>Fasilitas
           <select id="f_fas">
             <option>SOLID</option><option>LIQUID</option><option>STERIL</option><option>SEFALOSPORIN</option><option>TOLL OUT</option><option>PROBIOTIK</option>
@@ -641,7 +663,8 @@ function unpackWorkspaceDoc(raw) {
   return {
     ...parsed,
     ...raw,
-    id: raw.id ?? parsed.id,
+    id: parsed.id ?? raw.id,
+    docId: raw.id,
     batchNo: raw.batchNo ?? parsed.batchNo ?? parsed.batch_no ?? '',
     productName: raw.productName ?? parsed.productName ?? fallbackName ?? '',
     batchName: raw.batchName ?? parsed.batchName ?? '',
@@ -799,71 +822,173 @@ async function saveMetaDoc(key, data) {
   }
 }
 
-window.lookupBatchInfo = function() {
-  const rawBets = ($('f_bets').value || '').trim();
-  const hintEl = $('batch-lookup-hint');
-  if (!rawBets) {
-    hintEl.textContent = '';
-    return;
+/* ===== PEMILIH BETS DARI CYCLE TIME ===== */
+function ctBatchStatus(b) {
+  if (b && b.dpjTime) return { key: 'released', label: 'Released' };
+  const docs = (b && b.docs) || {};
+  const req = Object.values(docs).filter(d => d && d.required);
+  if (req.length && req.every(d => d.secondCheckTime)) return { key: 'ready', label: 'Siap Save DPJ' };
+  return { key: 'progress', label: 'Dalam proses' };
+}
+
+function stChipHtml(st) {
+  return `<span class="st-chip st-${st.key}">${esc(st.label)}</span>`;
+}
+
+function normBets(v) { return String(v || '').trim().toUpperCase(); }
+
+function ctBatchOptions(query) {
+  const q = String(query || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const seen = new Set();
+  const list = [];
+  WORKSPACE_BATCHES.forEach(b => {
+    const code = normBets(extractBatchCode(b));
+    if (!code || seen.has(b.id)) return;
+    seen.add(b.id);
+    const name = b.productName || (typeof b.batchName === 'string' ? b.batchName.split(' — Bets ')[0] : '');
+    const hay = `${code} ${name}`.toLowerCase();
+    if (q.every(t => hay.includes(t))) list.push({ batch: b, id: b.id, code, name, st: ctBatchStatus(b) });
+  });
+  // urutan dari Cycle Time: batch terbaru lebih dulu
+  list.sort((a, c) => (Number(a.batch.o) || 0) - (Number(c.batch.o) || 0));
+  return list;
+}
+
+function findCtBatchForRepair(r) {
+  if (!r) return null;
+  if (r.batchId) {
+    const byId = WORKSPACE_BATCHES.find(b => b.id === r.batchId);
+    if (byId) return byId;
   }
+  const code = normBets(r.bets);
+  return code ? (WORKSPACE_BATCHES.find(b => normBets(extractBatchCode(b)) === code) || null) : null;
+}
 
-  const targetLower = rawBets.toLowerCase();
-  const pool = [...WORKSPACE_BATCHES];
+function ctChip(r) {
+  const b = findCtBatchForRepair(r);
+  if (b) return stChipHtml(ctBatchStatus(b));
+  return r.betsSource === 'manual' ? '<span class="st-chip st-manual">Manual</span>' : '';
+}
 
-  let matched = pool.find(item => extractBatchCode(item).toLowerCase() === targetLower);
-  if (!matched) {
-    matched = pool.find(item => {
-      const code = extractBatchCode(item).toLowerCase();
-      return code && (code.includes(targetLower) || targetLower.includes(code));
-    });
+let betsActiveIdx = -1;
+let betsCurrentOptions = [];
+
+function renderBetsList() {
+  const box = $('bets-list');
+  if (!box) return;
+  if ($('f_manual').checked) { box.classList.remove('on'); return; }
+  betsCurrentOptions = ctBatchOptions($('f_bets').value).slice(0, 60);
+  betsActiveIdx = betsCurrentOptions.length ? 0 : -1;
+  if (!WORKSPACE_BATCHES.length) {
+    box.innerHTML = '<div class="combo-empty">Belum ada data bets dari Cycle Time (belum login / belum ada batch). Centang “input manual” bila perlu.</div>';
+  } else if (!betsCurrentOptions.length) {
+    box.innerHTML = '<div class="combo-empty">Tidak ada bets yang cocok. Centang “Bets belum ada di Cycle Time (input manual)” bila memang belum tercatat.</div>';
+  } else {
+    box.innerHTML = betsCurrentOptions.map((o, i) => `
+      <div class="combo-item ${i === 0 ? 'act' : ''}" role="option" data-i="${i}" onmousedown="event.preventDefault();pickBets(${i})">
+        <span><b>${esc(o.code)}</b><small>${esc(o.name || '—')}</small></span>${stChipHtml(o.st)}
+      </div>`).join('');
   }
+  box.classList.add('on');
+}
 
-  if (matched) {
-    const info = extractProductInfo(matched);
-    if (info.name && !$('f_prod').value.trim()) {
-      $('f_prod').value = info.name;
-    }
-    if (info.facility) {
-      const fasUpper = info.facility.toUpperCase();
-      const optExists = Array.from($('f_fas').options).some(o => o.value === fasUpper);
-      if (optExists) $('f_fas').value = fasUpper;
-    }
-    const foundCode = extractBatchCode(matched);
-    hintEl.textContent = `Terbaca dari data: ${foundCode}${info.name ? ' — ' + info.name : ''}`;
-    return;
+window.onBetsFocus = function() { renderBetsList(); };
+
+window.onBetsInput = function() {
+  const inp = $('f_bets');
+  const pos = inp.selectionStart;
+  inp.value = inp.value.toUpperCase();
+  try { inp.setSelectionRange(pos, pos); } catch (e) {}
+  if (!$('f_manual').checked) {
+    // mengubah teks memutus tautan; teks yang persis sama dengan satu bets Cycle Time tertaut otomatis
+    const exact = WORKSPACE_BATCHES.filter(b => normBets(extractBatchCode(b)) === normBets(inp.value));
+    if (exact.length === 1) { linkBatch(exact[0], false); }
+    else { unlinkBatch(); renderBetsList(); }
   }
-
-  if (rawBets.length >= 2) {
-    const aa = rawBets.slice(0, 2).toUpperCase();
-    const aaMatch = WORKSPACE_PRODUCTS.find(item =>
-      String(item.codeAA || '').trim().toUpperCase() === aa
-    );
-    if (aaMatch) {
-      const name = aaMatch.name || aaMatch.namaProduk || '';
-      if (name && !$('f_prod').value.trim()) {
-        $('f_prod').value = name;
-      }
-      hintEl.textContent = `Cocok kode produk AA (${aa}) dari Master Cycle Time${name ? ': ' + name : ''}.`;
-      return;
-    }
-  }
-
-  hintEl.textContent = 'No. bets belum ditemukan (tetap bisa diisi manual).';
 };
 
-function countWorkspaceBatchesForMonth(monthStr) {
-  if (!monthStr) return null;
-  if (!WORKSPACE_BATCHES.length) return null;
-  const uniqueBatches = new Set();
+window.onBetsKeydown = function(ev) {
+  const box = $('bets-list');
+  if (!box || !box.classList.contains('on') || !betsCurrentOptions.length) return;
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    betsActiveIdx = (betsActiveIdx + (ev.key === 'ArrowDown' ? 1 : -1) + betsCurrentOptions.length) % betsCurrentOptions.length;
+    box.querySelectorAll('.combo-item').forEach((el, i) => el.classList.toggle('act', i === betsActiveIdx));
+    const act = box.querySelector('.combo-item.act');
+    if (act) act.scrollIntoView({ block: 'nearest' });
+  } else if (ev.key === 'Enter' && betsActiveIdx >= 0) {
+    ev.preventDefault();
+    pickBets(betsActiveIdx);
+  } else if (ev.key === 'Escape') {
+    box.classList.remove('on');
+  }
+};
+
+window.pickBets = function(i) {
+  const o = betsCurrentOptions[i];
+  if (!o) return;
+  linkBatch(o.batch, true);
+};
+
+function linkBatch(b, closeList) {
+  const code = normBets(extractBatchCode(b));
+  const info = extractProductInfo(b);
+  $('f_bets').value = code;
+  $('f_batch_id').value = b.id;
+  $('f_prod').value = info.name || b.productName || '';
+  $('f_prod').readOnly = true;
+  if (info.facility) {
+    const fasUpper = info.facility.toUpperCase();
+    if (Array.from($('f_fas').options).some(o => o.value === fasUpper)) $('f_fas').value = fasUpper;
+  }
+  $('batch-lookup-hint').textContent = `Terhubung ke Cycle Time: ${code} — ${$('f_prod').value} (${ctBatchStatus(b).label})`;
+  if (closeList) $('bets-list').classList.remove('on');
+}
+
+function unlinkBatch() {
+  $('f_batch_id').value = '';
+  if (!$('f_manual').checked) {
+    $('f_prod').readOnly = false;
+    $('batch-lookup-hint').textContent = $('f_bets').value.trim() ? 'Pilih No. Bets dari daftar Cycle Time.' : '';
+  }
+}
+
+window.onManualToggle = function() {
+  const manual = $('f_manual').checked;
+  $('f_batch_id').value = '';
+  $('f_prod').readOnly = false;
+  $('bets-list').classList.remove('on');
+  $('batch-lookup-hint').textContent = manual
+    ? 'Mode manual: perbaikan ini tidak tertaut ke Cycle Time (tidak otomatis ikut data rilis).'
+    : 'Pilih No. Bets dari daftar Cycle Time.';
+  $('f_bets').placeholder = manual ? 'Ketik No. Bets manual' : 'Cari No. Bets…';
+  if (!manual) renderBetsList();
+};
+
+document.addEventListener('click', (e) => {
+  const combo = $('bets-combo');
+  if (combo && !combo.contains(e.target)) { const l = $('bets-list'); if (l) l.classList.remove('on'); }
+});
+
+// Bets dihitung RILIS tepat ketika Save DPJ selesai di Cycle Time (dpjTime terisi), pada bulan tanggal Save DPJ.
+function releasedBatchesForMonth(monthStr) {
+  if (!monthStr || !WORKSPACE_BATCHES.length) return null;
+  const unique = new Map();
   WORKSPACE_BATCHES.forEach(b => {
-    const dt = String(
-      b.dpjTime || b.releaseDate || b.tglRilis || b.tglSelesai || b.completedAt || b.createdAt || b.date || ''
-    );
-    if (dt.startsWith(monthStr)) {
-      uniqueBatches.add(extractBatchCode(b) || b.id);
+    const dt = String(b.dpjTime || '').trim();
+    if (!dt || !dt.startsWith(monthStr)) return;
+    const code = normBets(extractBatchCode(b)) || b.id;
+    if (!unique.has(code)) {
+      const name = b.productName || (typeof b.batchName === 'string' ? b.batchName.split(' — Bets ')[0] : '');
+      unique.set(code, { code, name, date: dt });
     }
   });
-  return uniqueBatches.size;
+  return Array.from(unique.values()).sort((a, c) => (a.date < c.date ? 1 : a.date > c.date ? -1 : a.code.localeCompare(c.code)));
+}
+
+function countWorkspaceBatchesForMonth(monthStr) {
+  const list = releasedBatchesForMonth(monthStr);
+  return list === null ? null : list.length;
 }
 
 function rerenderCurrentPage() {
@@ -980,7 +1105,7 @@ function renderDashboard() {
       const isLate = age > CFG.maxDays;
       const bagDisplay = r.subBag ? `${r.bag} (${r.subBag})` : r.bag;
       return `<tr>
-        <td><b>${esc(r.bets)}</b></td>
+        <td><b>${esc(r.bets)}</b> ${ctChip(r)}</td>
         <td>${esc(r.prod)}</td>
         <td>${esc(r.fas)}</td>
         <td><span class="chip">${esc(bagDisplay)}</span></td>
@@ -1056,7 +1181,7 @@ window.renderMonitoring = function() {
             <option value="Konfirmasi" ${r.st === 'Konfirmasi' ? 'selected' : ''}>Konfirmasi</option>
           </select>
         </td>
-        <td><b>${esc(r.bets)}</b></td>
+        <td><b>${esc(r.bets)}</b> ${ctChip(r)}</td>
         <td>${esc(r.prod)}</td>
         <td>${esc(r.fas)}</td>
         <td>${esc(bagDisplay)}</td>
@@ -1138,8 +1263,18 @@ window.renderAnalitik = function() {
   const autoBatchCount = countWorkspaceBatchesForMonth(selectedMonth);
   const releasedCount = typeof overrideCount === 'number' ? overrideCount : (autoBatchCount || 0);
   const sourceLabel = typeof overrideCount === 'number'
-    ? 'Manual override'
-    : (autoBatchCount !== null ? 'Data cycle time / batches' : 'Belum ada data');
+    ? 'Manual (koreksi)'
+    : (autoBatchCount !== null ? 'Otomatis dari Cycle Time (Save DPJ)' : 'Belum ada data');
+  const releasedList = releasedBatchesForMonth(selectedMonth) || [];
+  const mismatchNote = (typeof overrideCount === 'number' && autoBatchCount !== null && overrideCount !== autoBatchCount)
+    ? `<span style="display:block;font-size:11px;color:var(--warn);font-weight:700;margin-top:2px">⚠ Angka manual (${overrideCount}) berbeda dari otomatis Cycle Time (${autoBatchCount}). Kosongkan kolom manual untuk memakai otomatis.</span>`
+    : '';
+  const releasedDetails = releasedList.length
+    ? `<details style="margin-top:6px"><summary style="cursor:pointer;font-size:11.5px;color:var(--accent-2);font-weight:700">Lihat ${releasedList.length} bets rilis bulan ini</summary>
+         <div style="max-height:180px;overflow:auto;margin-top:6px;font-size:11.5px;line-height:1.6">
+           ${releasedList.map(x => `<div><b>${esc(x.code)}</b> — ${esc(x.name || '—')} <span style="color:var(--muted)">(${esc(x.date)})</span></div>`).join('')}
+         </div></details>`
+    : '';
 
   $('rel-count').value = typeof overrideCount === 'number' ? overrideCount : '';
   $('btn-save-release').disabled = !isLoggedIn;
@@ -1157,6 +1292,8 @@ window.renderAnalitik = function() {
         <small>Total Bets Rilis (${esc(selectedMonth)})</small>
         <strong>${releasedCount} <span style="font-size:12px;font-weight:600;color:var(--muted)">bets</span></strong>
         <span style="font-size:11px;color:var(--accent);font-weight:600">Sumber: ${esc(sourceLabel)}</span>
+        ${mismatchNote}
+        ${releasedDetails}
       </div>
       <div class="stat-box">
         <small>Perbaikan Aktual</small>
@@ -1304,7 +1441,6 @@ window.openFormModal = function(editId = null) {
     return;
   }
 
-  refreshBatchDatalist();
   rowCounter = 0;
   const container = $('repair-items-container');
   container.innerHTML = '';
@@ -1319,6 +1455,16 @@ window.openFormModal = function(editId = null) {
     $('f_bets').value = r.bets;
     $('f_fas').value = r.fas;
     $('f_prod').value = r.prod;
+    $('f_batch_id').value = '';
+    $('f_manual').checked = false;
+    $('f_prod').readOnly = false;
+    const linked = findCtBatchForRepair(r);
+    if (linked) { linkBatch(linked, true); $('f_fas').value = r.fas; }
+    else {
+      $('f_manual').checked = true;     // data lama / bets yang tidak ada di Cycle Time
+      onManualToggle();
+      $('batch-lookup-hint').textContent = 'Bets ini tidak ditemukan di Cycle Time (dipertahankan sebagai input manual).';
+    }
     $('btn-add-row').style.display = 'none';
     $('btn-submit-form').textContent = 'Simpan Perubahan';
     container.innerHTML = createRepairItemHTML(r, true);
@@ -1328,6 +1474,13 @@ window.openFormModal = function(editId = null) {
     $('f_tgl_kirim').value = todayStr();
     $('f_bets').value = '';
     $('f_prod').value = '';
+    $('f_batch_id').value = '';
+    $('f_prod').readOnly = false;
+    $('f_manual').checked = WORKSPACE_BATCHES.length === 0;   // belum ada data Cycle Time -> manual
+    onManualToggle();
+    $('batch-lookup-hint').textContent = WORKSPACE_BATCHES.length === 0
+      ? 'Data Cycle Time belum tersedia (belum login atau belum ada batch), jadi input manual diaktifkan.'
+      : 'Pilih No. Bets dari daftar Cycle Time.';
     $('btn-add-row').style.display = 'inline-flex';
     $('btn-submit-form').textContent = 'Simpan Semua Data';
     addRepairItemRow();
@@ -1342,9 +1495,17 @@ window.saveTemuan = async function(e) {
   e.preventDefault();
   const editId = $('f_id').value;
   const tglKirim = $('f_tgl_kirim').value;
-  const bets = $('f_bets').value.trim();
+  const manual = $('f_manual').checked;
+  const batchId = manual ? '' : $('f_batch_id').value;
+  const bets = normBets($('f_bets').value);
   const fas = $('f_fas').value;
   const prod = $('f_prod').value.trim();
+
+  if (!manual && !batchId) {
+    alert('Pilih No. Bets dari daftar Cycle Time. Jika bets memang belum tercatat di Cycle Time, centang “input manual”.');
+    $('f_bets').focus();
+    return;
+  }
 
   const rowEls = $('repair-items-container').querySelectorAll('.item-box');
   const items = [];
@@ -1369,6 +1530,8 @@ window.saveTemuan = async function(e) {
       subBag,
       prod,
       bets,
+      batchId,
+      betsSource: manual ? 'manual' : 'cycletime',
       kat: card.querySelector('.inp-kat').value,
       sub: card.querySelector('.inp-sub').value,
       ket: card.querySelector('.inp-ket').value.trim(),
