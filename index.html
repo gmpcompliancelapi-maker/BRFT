@@ -431,6 +431,7 @@ td select[data-st=Konfirmasi]{color:#92400e;background:#fffbeb;border-color:#fde
     </div>
 
     <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--line-soft);padding-top:12px">
+      <button type="button" class="btn btn-bad" id="btn-delete-form" style="display:none;margin-right:auto" onclick="hapusPerbaikan()">Hapus Data</button>
       <button type="button" class="btn btn-ghost" onclick="closeFormModal()">Batal</button>
       <button type="submit" class="btn" id="btn-submit-form">Simpan Data</button>
     </div>
@@ -479,7 +480,7 @@ import {
   GoogleAuthProvider, signInWithPopup, signOut
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, setDoc, onSnapshot
+  getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -779,6 +780,21 @@ async function saveRepairDoc(record) {
     console.warn('Firestore save brft_repairs:', err);
     setSyncStatus('Gagal Sync (Rules)', '#f87171');
     alert('Data GAGAL tersimpan ke server. Cek koneksi / Firestore Rules.');
+  }
+}
+
+async function deleteRepairDoc(id) {
+  if (!authUser) return false;
+  try {
+    setSyncStatus('Menghapus...', '#fbbf24');
+    await deleteDoc(doc(db, ...WORKSPACE_ROOT, 'brft_repairs', id));
+    setSyncStatus('Firestore Aktif', '#4ade80');
+    return true;
+  } catch (err) {
+    console.warn('Firestore delete brft_repairs:', err);
+    setSyncStatus('Gagal Sync (Rules)', '#f87171');
+    alert('Data GAGAL dihapus dari server. Cek koneksi / Firestore Rules.');
+    return false;
   }
 }
 
@@ -1487,6 +1503,7 @@ window.openFormModal = function(editId = null) {
     }
     $('btn-add-row').style.display = 'none';
     $('btn-submit-form').textContent = 'Simpan Perubahan';
+    $('btn-delete-form').style.display = 'inline-flex';
     container.innerHTML = createRepairItemHTML(r, true);
   } else {
     $('modal-form-title').textContent = 'Input Perbaikan Batch Record';
@@ -1503,10 +1520,25 @@ window.openFormModal = function(editId = null) {
       : 'Pilih No. Bets dari daftar Cycle Time.';
     $('btn-add-row').style.display = 'inline-flex';
     $('btn-submit-form').textContent = 'Simpan Semua Data';
+    $('btn-delete-form').style.display = 'none';
     addRepairItemRow();
   }
 
   $('modal-form').classList.add('on');
+};
+
+window.hapusPerbaikan = async function() {
+  const id = $('f_id').value;
+  const r = R.find(x => x.id === id);
+  if (!id || !r) return;
+  const info = `Bets ${r.bets} — ${r.bag}${r.subBag ? ' (' + r.subBag + ')' : ''} — ${r.sub || r.kat}`;
+  if (!confirm(`Hapus data perbaikan ini secara permanen?\n\n${info}\n\nTindakan ini tidak bisa dibatalkan.`)) return;
+  const ok = await deleteRepairDoc(id);
+  if (!ok) return;
+  R = R.filter(x => x.id !== id);
+  await saveLogEntry({ tgl: todayStr(), jam: nowTime(), usr: currentUser.name, aksi: `Hapus data (${r.bag}${r.subBag ? ' ' + r.subBag : ''}, ${r.sub || r.kat})`, ref: r.bets, st: r.st });
+  closeFormModal();
+  rerenderCurrentPage();
 };
 
 window.closeFormModal = () => $('modal-form').classList.remove('on');
