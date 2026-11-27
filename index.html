@@ -1303,10 +1303,23 @@ window.renderAnalitik = function() {
   $('btn-save-release').disabled = !isLoggedIn;
 
   const monthRecords = R.filter(r => String(r.tglKirim || '').startsWith(selectedMonth));
-  const actualPerbaikan = monthRecords.filter(r => r.st === 'Open' || r.st === 'Close').length;
+  // Skor: per bets, tiap BAGIAN yang punya perbaikan (Open/Close) dihitung 1 -> 1/6 dari nilai bets.
+  // Banyak item di bagian yang sama pada bets yang sama tetap dihitung 1. Konfirmasi tidak dihitung.
+  const BAGIAN_TOTAL = BAGIAN_LIST.length;   // 6
+  const pairSet = new Set();
+  const betsSet = new Set();
+  monthRecords.forEach(r => {
+    if (r.st !== 'Open' && r.st !== 'Close') return;
+    const b = String(r.bets || '').trim().toUpperCase();
+    if (!b || !r.bag) return;
+    pairSet.add(b + '|' + r.bag);
+    betsSet.add(b);
+  });
+  const actualPerbaikan = pairSet.size;          // jumlah (bets, bagian) yang ada perbaikan
+  const betsTerdampak = betsSet.size;
   const konfirmasiCount = monthRecords.filter(r => r.st === 'Konfirmasi').length;
 
-  const rasioPerbaikan = releasedCount > 0 ? ((actualPerbaikan / releasedCount) * 100).toFixed(1) : '0.0';
+  const rasioPerbaikan = releasedCount > 0 ? ((actualPerbaikan / (releasedCount * BAGIAN_TOTAL)) * 100).toFixed(1) : '0.0';
   const brftBulanan = releasedCount > 0 ? Math.max(0, (100 - parseFloat(rasioPerbaikan))).toFixed(1) : null;
 
   $('analitik-summary').innerHTML = `
@@ -1320,12 +1333,12 @@ window.renderAnalitik = function() {
       </div>
       <div class="stat-box">
         <small>Perbaikan Aktual</small>
-        <strong style="color:var(--warn)">${actualPerbaikan} <span style="font-size:12px;font-weight:600;color:var(--muted)">(${konfirmasiCount} konfirmasi)</span></strong>
-        <span style="font-size:11px;color:var(--muted)">Rasio temuan: ${rasioPerbaikan}%</span>
+        <strong style="color:var(--warn)">${actualPerbaikan} <span style="font-size:12px;font-weight:600;color:var(--muted)">bagian (${betsTerdampak} bets) · ${konfirmasiCount} konfirmasi tidak dihitung</span></strong>
+        <span style="font-size:11px;color:var(--muted)">Rasio temuan: ${rasioPerbaikan}% = ${actualPerbaikan} ÷ (${releasedCount} bets × ${BAGIAN_TOTAL} bagian)</span>
       </div>
     </div>
     <div class="eff-banner">
-      <span style="font-size:12px;color:var(--muted);font-weight:600">Estimasi Efisiensi Bulanan (Bets Rilis vs Perbaikan Aktual)</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">Estimasi Efisiensi Bulanan = 100% − rasio temuan (tiap bagian ber-perbaikan = 1/6 per bets)</span>
       ${brftBulanan !== null
         ? `<strong>${brftBulanan}%</strong>`
         : `<div style="font-size:13px;color:var(--muted);margin-top:6px">Belum ada data bets rilis untuk bulan ${esc(selectedMonth)}.</div>`}
