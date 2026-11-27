@@ -1133,7 +1133,7 @@ window.renderMonitoring = function() {
   let D = R.filter(r =>
     (!f || r.fas === f) &&
     (!stFilter || r.st === stFilter) &&
-    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q) || String(r.pic || '').toLowerCase().includes(q) || String(r.ket || '').toLowerCase().includes(q))
+    (!q || r.bets.toLowerCase().includes(q) || r.prod.toLowerCase().includes(q) || r.bag.toLowerCase().includes(q) || String(r.pic || '').toLowerCase().includes(q) || String(r.ket || '').toLowerCase().includes(q) || String(r.catKembali || '').toLowerCase().includes(q))
   );
 
   D.sort((a, b) => {
@@ -1145,6 +1145,7 @@ window.renderMonitoring = function() {
 
   $('tb-monitoring').innerHTML = D.length ? `<table>
     <tr>
+      ${isLoggedIn ? '<th>Aksi</th>' : ''}
       <th>Status</th>
       <th>No. Bets</th>
       <th>Nama Produk</th>
@@ -1152,17 +1153,18 @@ window.renderMonitoring = function() {
       <th>Bagian</th>
       <th>Sub Kategori</th>
       <th>Keterangan Perbaikan</th>
+      <th>Catatan Saat Kembali</th>
       <th>Penanggung Jawab</th>
       <th>Tgl Kirim</th>
       <th>Tgl Kembali</th>
       <th>Umur</th>
-      ${isLoggedIn ? '<th>Aksi</th>' : ''}
     </tr>
     ${D.map(r => {
       const age = calcAgeDays(r);
       const isLate = r.st === 'Open' && age > CFG.maxDays;
       const bagDisplay = r.subBag ? `${r.bag} (${r.subBag})` : r.bag;
       return `<tr>
+        ${isLoggedIn ? `<td><button type="button" class="btn btn-ghost btn-sm" onclick="openFormModal('${r.id}')">✎ Edit</button></td>` : ''}
         <td>
           <select data-st="${r.st}" onchange="quickUpdateStatus('${r.id}', this.value)" ${!isLoggedIn ? 'disabled' : ''}>
             <option value="Open" ${r.st === 'Open' ? 'selected' : ''}>Open</option>
@@ -1176,11 +1178,11 @@ window.renderMonitoring = function() {
         <td>${esc(bagDisplay)}</td>
         <td>${esc(r.sub)}</td>
         <td class="td-ket">${r.ket ? esc(r.ket) : '<span style="color:var(--muted)">-</span>'}</td>
+        <td class="td-ket">${r.catKembali ? esc(r.catKembali) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${r.pic ? esc(r.pic) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${esc(r.tglKirim)}</td>
         <td>${r.tglKembali ? esc(r.tglKembali) : '<span style="color:var(--muted)">-</span>'}</td>
         <td>${ageCell(age, r.st === 'Open')}</td>
-        ${isLoggedIn ? `<td><button type="button" class="btn btn-ghost btn-sm" onclick="openFormModal('${r.id}')">Edit</button></td>` : ''}
       </tr>`;
     }).join('')}
   </table>` : `<p style="padding:18px;color:var(--muted);text-align:center">Tidak ada data ditemukan.</p>`;
@@ -1197,6 +1199,20 @@ window.quickUpdateStatus = async function(id, newStatus) {
   if (!isLoggedIn) return;
   const r = R.find(x => x.id === id);
   if (!r) return;
+
+  // Dokumen kembali dari perbaikan (Close/Konfirmasi): buka form supaya penerima bisa menulis catatan
+  if (newStatus !== 'Open' && r.st !== newStatus) {
+    rerenderCurrentPage();               // kembalikan dropdown; status baru disimpan lewat form
+    openFormModal(id);
+    const sel = document.querySelector('#repair-items-container .inp-st');
+    if (sel) {
+      sel.value = newStatus;
+      onRowStatusChange(sel);
+      const n = document.querySelector('#repair-items-container .inp-cat-kembali');
+      if (n) n.focus();
+    }
+    return;
+  }
 
   r.st = newStatus;
   if (newStatus === 'Close' || newStatus === 'Konfirmasi') {
@@ -1314,6 +1330,7 @@ function createRepairItemHTML(data = {}, isSingleEdit = false) {
   const tglKembali = data.tglKembali || '';
   const ket = data.ket || '';
   const pic = data.pic || '';
+  const catKembali = data.catKembali || '';
   const showSubBag = (bag === 'PN1' || bag === 'PN2');
 
   let subOptions = SUB_KATEGORI.map(s => `<option value="${esc(s)}" ${s === sub ? 'selected' : ''}>${esc(s)}</option>`).join('');
@@ -1370,6 +1387,9 @@ function createRepairItemHTML(data = {}, isSingleEdit = false) {
       <label class="c4">Keterangan Perbaikan
         <input type="text" class="inp-ket" required value="${esc(ket)}" placeholder="Jelaskan detail perbaikan atau hasil konfirmasi...">
       </label>
+      <label class="c4 wrap-cat-kembali" style="display:${st !== 'Open' ? 'flex' : 'none'}">Catatan Saat Kembali dari Perbaikan
+        <input type="text" class="inp-cat-kembali" value="${esc(catKembali)}" placeholder="Catatan dari penerima: hasil perbaikan, sisa temuan, tindak lanjut...">
+      </label>
     </div>
   </div>`;
 }
@@ -1390,6 +1410,7 @@ window.duplicateRepairRow = function(rid) {
     kat: rowEl.querySelector('.inp-kat').value,
     sub: rowEl.querySelector('.inp-sub').value,
     pic: rowEl.querySelector('.inp-pic').value,
+    catKembali: '',
     ket: ''
   });
 };
@@ -1422,11 +1443,14 @@ window.onRowStatusChange = function(selEl) {
   const card = selEl.closest('.item-box');
   const wrap = card.querySelector('.wrap-tgl-kembali');
   const inp = card.querySelector('.inp-tgl-kembali');
+  const wrapCat = card.querySelector('.wrap-cat-kembali');
   if (selEl.value === 'Close' || selEl.value === 'Konfirmasi') {
     wrap.style.display = 'flex';
+    wrapCat.style.display = 'flex';
     if (!inp.value) inp.value = todayStr();
   } else {
     wrap.style.display = 'none';
+    wrapCat.style.display = 'none';
     inp.value = '';
   }
 };
@@ -1532,6 +1556,7 @@ window.saveTemuan = async function(e) {
       sub: card.querySelector('.inp-sub').value,
       pic: card.querySelector('.inp-pic').value.trim(),
       ket: card.querySelector('.inp-ket').value.trim(),
+      catKembali: card.querySelector('.inp-cat-kembali').value.trim(),
       st,
       usr: currentUser.name
     });
@@ -1616,9 +1641,9 @@ window.saveSettings = async function(e) {
 };
 
 window.exportData = function() {
-  let csv = '\uFEFFNo.Bets,Nama Produk,Fasilitas,Bagian,Sub-Bagian,Kategori,Sub Kategori,Penanggung Jawab,Status,Tgl Kirim Perbaikan,Tgl Perbaikan Kembali,Umur (Hari),Keterangan\n';
+  let csv = '\uFEFFNo.Bets,Nama Produk,Fasilitas,Bagian,Sub-Bagian,Kategori,Sub Kategori,Penanggung Jawab,Status,Tgl Kirim Perbaikan,Tgl Perbaikan Kembali,Umur (Hari),Keterangan,Catatan Saat Kembali\n';
   R.forEach(r => {
-    csv += `"${r.bets}","${r.prod}","${r.fas}","${r.bag}","${r.subBag || '-'}","${r.kat}","${r.sub}","${String(r.pic || '').replace(/"/g, '""')}","${r.st}","${r.tglKirim}","${r.tglKembali || '-'}","${calcAgeDays(r)}","${String(r.ket || '').replace(/"/g, '""')}"\n`;
+    csv += `"${r.bets}","${r.prod}","${r.fas}","${r.bag}","${r.subBag || '-'}","${r.kat}","${r.sub}","${String(r.pic || '').replace(/"/g, '""')}","${r.st}","${r.tglKirim}","${r.tglKembali || '-'}","${calcAgeDays(r)}","${String(r.ket || '').replace(/"/g, '""')}","${String(r.catKembali || '').replace(/"/g, '""')}"\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
